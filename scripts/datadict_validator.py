@@ -128,7 +128,7 @@ def process(dd, fixed_rows):
             print "ERROR: There was a failure in at least one row"
 
 
-def main(argv):
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadict",
                         help="the data dictionary csv file",
@@ -144,4 +144,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    sys.exit(main())
