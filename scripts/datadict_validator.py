@@ -3,10 +3,11 @@
 @author: Victor Meyerson
 '''
 
-import argparse
+import os
 import csv
-import os.path
 import sys
+import argparse
+
 
 FIELD_NAME = "Variable / Field Name"
 FORM = "Form Name"
