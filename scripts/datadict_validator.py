@@ -24,7 +24,7 @@ HEADERS = [FIELD_NAME, FORM, FIELD_TYPE, FIELD_LABEL, CHOICES, TEXT_TYPE,
 FIXED_ROWS = ["subject", "arm", "visit"]
 
 
-def checkHeaders(headers):
+def check_headers(headers):
     retVal = False
     for field in HEADERS:
         if field not in headers:
@@ -33,14 +33,14 @@ def checkHeaders(headers):
     return retVal
 
 
-def checkRow(row, number):
+def check_row(row, number):
     print "form: %s, field: %s, value type: %s" % (row[FORM],
                                                    row[FIELD_NAME],
                                                    row[FIELD_TYPE])
-    checkValueType(row)
+    check_value_type(row)
 
 
-def checkValueType(row):
+def check_value_type(row):
     if row[FIELD_TYPE] == "dropdown":
         return validateDropdown(row[CHOICES])
     elif row[FIELD_TYPE] == "yesno":
@@ -51,7 +51,7 @@ def checkValueType(row):
         print "WARNING: Skipping validation of type: '%s'" % row[FIELD_TYPE]
 
 
-def validateDropdown(choicesStr):
+def validate_dropdown(choicesStr):
     retVal = False
     choices = choicesStr.split('|')
     if len(choices) <= 1:
@@ -64,7 +64,7 @@ def validateDropdown(choicesStr):
     return retVal
 
 
-def validateYesNo(row):
+def validate_yes_no(row):
     retVal = False
     if len(row[CHOICES]) > 0:
         print "YesNo field should not have choices"
@@ -72,7 +72,7 @@ def validateYesNo(row):
     return retVal
 
 
-def validateText(row):
+def validate_text(row):
     retVal = False
     print "  Item: %s is a %s" % (row[FIELD_NAME], row[TEXT_TYPE])
     if row[TEXT_TYPE] == "number":
@@ -83,7 +83,7 @@ def validateText(row):
     return retVal
 
 
-def validateNumericRange(lowStr, highStr):
+def validate_numeric_range(lowStr, highStr):
     retVal = False
     print "  Range: [%s,%s]" % (lowStr, highStr)
     low = float(lowStr)
@@ -110,14 +110,14 @@ def process(dd, fixed_rows):
     with open(dd) as f:
         reader = csv.DictReader(f)
         # check existance of headers
-        if checkHeaders(reader.fieldnames):
+        if check_headers(reader.fieldnames):
             print "ERROR: Header check FAILED!"
             return
         # check each row
         tmpVal = False
         tmpCounter = 0
         for row in reader:
-            tmpVal = checkRow(row, reader.line_num) or tmpVal
+            tmpVal = check_row(row, reader.line_num) or tmpVal
             if fixed_rows and tmpCounter < len(FIXED_ROWS):
                 if row[FIELD_NAME] != FIXED_ROWS[tmpCounter]:
                     print "ERROR: field should be '%s' found '%s'" % \
