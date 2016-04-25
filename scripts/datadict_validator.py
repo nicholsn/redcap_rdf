@@ -25,11 +25,11 @@ FIXED_ROWS = ["subject", "arm", "visit"]
 
 
 def checkHeaders(headers):
-    retVal = False;
+    retVal = False
     for field in HEADERS:
         if field not in headers:
             print "Could not find: %s in the header" % field
-            retVal = True;
+            retVal = True
     return retVal
 
 
@@ -115,7 +115,7 @@ def process(dd, fixed_rows):
             return
         # check each row
         tmpVal = False
-        tmpCounter = 0;
+        tmpCounter = 0
         for row in reader:
             tmpVal = checkRow(row, reader.line_num) or tmpVal
             if fixed_rows and tmpCounter < len(FIXED_ROWS):
@@ -129,7 +129,7 @@ def process(dd, fixed_rows):
 
 
 def main(argv):
-    parser = argparse.ArgumentParser();
+    parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadict",
             help="the data dictionary csv file",
             type=str)
