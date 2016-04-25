@@ -22,6 +22,7 @@ HEADERS = [FIELD_NAME, FORM,FIELD_TYPE, FIELD_LABEL, CHOICES, TEXT_TYPE, TEXT_MI
 # TODO: make these fields more flexible for other validations
 FIXED_ROWS = ["subject", "arm", "visit"]
 
+
 def checkHeaders(headers):
     retVal = False;
     for field in HEADERS:
