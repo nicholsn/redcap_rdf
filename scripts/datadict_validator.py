@@ -25,12 +25,12 @@ FIXED_ROWS = ["subject", "arm", "visit"]
 
 
 def check_headers(headers):
-    retVal = False
+    ret_val = False
     for field in HEADERS:
         if field not in headers:
             print "Could not find: %s in the header" % field
-            retVal = True
-    return retVal
+            ret_val = True
+    return ret_val
 
 
 def check_row(row, number):
@@ -42,17 +42,17 @@ def check_row(row, number):
 
 def check_value_type(row):
     if row[FIELD_TYPE] == "dropdown":
-        return validateDropdown(row[CHOICES])
+        return validate_dropdown(row[CHOICES])
     elif row[FIELD_TYPE] == "yesno":
-        return validateYesNo(row)
+        return validate_yes_no(row)
     elif row[FIELD_TYPE] == "text":
-        return validateText(row)
+        return validate_text(row)
     else:
         print "WARNING: Skipping validation of type: '%s'" % row[FIELD_TYPE]
 
 
 def validate_dropdown(choicesStr):
-    retVal = False
+    ret_val = False
     choices = choicesStr.split('|')
     if len(choices) <= 1:
         print "There should be more than one choice"
@@ -60,42 +60,42 @@ def validate_dropdown(choicesStr):
         breakdown = choice.split(",")
         if len(breakdown) != 2:
             print "This is an invalid choice: %s" % choice
-            retVal = True
-    return retVal
+            ret_val = True
+    return ret_val
 
 
 def validate_yes_no(row):
-    retVal = False
+    ret_val = False
     if len(row[CHOICES]) > 0:
         print "YesNo field should not have choices"
-        retVal = True
-    return retVal
+        ret_val = True
+    return ret_val
 
 
 def validate_text(row):
-    retVal = False
+    ret_val = False
     print "  Item: %s is a %s" % (row[FIELD_NAME], row[TEXT_TYPE])
     if row[TEXT_TYPE] == "number":
-        retVal = validateNumericRange(row[TEXT_MIN], row[TEXT_MAX])
+        ret_val = validate_numeric_range(row[TEXT_MIN], row[TEXT_MAX])
     else:
-        retVal = True
+        ret_val = True
         print "  No validation rules for type: '%s'" % row[TEXT_TYPE]
-    return retVal
+    return ret_val
 
 
-def validate_numeric_range(lowStr, highStr):
-    retVal = False
-    print "  Range: [%s,%s]" % (lowStr, highStr)
-    low = float(lowStr)
-    if highStr != "":
-        high = float(highStr)
+def validate_numeric_range(low_str, high_str):
+    ret_val = False
+    print "  Range: [%s,%s]" % (low_str, high_str)
+    low = float(low_str)
+    if high_str != "":
+        high = float(high_str)
         if high < low:
-            retVal = True
+            ret_val = True
             print "  Max value (%s) should not be less than min value (%s)" % \
-                  (highStr, lowStr)
+                  (high_str, low_str)
     else:
         print "WARNING: no maximum value set"
-    return retVal
+    return ret_val
 
 
 def process(dd, fixed_rows):
@@ -114,17 +114,17 @@ def process(dd, fixed_rows):
             print "ERROR: Header check FAILED!"
             return
         # check each row
-        tmpVal = False
-        tmpCounter = 0
+        tmp_val = False
+        tmp_counter = 0
         for row in reader:
-            tmpVal = check_row(row, reader.line_num) or tmpVal
-            if fixed_rows and tmpCounter < len(FIXED_ROWS):
-                if row[FIELD_NAME] != FIXED_ROWS[tmpCounter]:
+            tmp_Val = check_row(row, reader.line_num) or tmp_val
+            if fixed_rows and tmp_counter < len(FIXED_ROWS):
+                if row[FIELD_NAME] != FIXED_ROWS[tmp_counter]:
                     print "ERROR: field should be '%s' found '%s'" % \
-                          (FIXED_ROWS[tmpCounter], row[FIELD_NAME])
-                    tmpVal = True
-                tmpCounter += 1
-        if tmpVal:
+                          (FIXED_ROWS[tmp_counter], row[FIELD_NAME])
+                    tmp_val = True
+                tmp_counter += 1
+        if tmp_val:
             print "ERROR: There was a failure in at least one row"
 
 
