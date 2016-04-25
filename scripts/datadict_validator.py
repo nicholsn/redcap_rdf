@@ -1,7 +1,7 @@
-''' Data Dictionary CSV Validator
+""" Data Dictionary CSV Validator
 
 @author: Victor Meyerson
-'''
+"""
 
 import os
 import csv
