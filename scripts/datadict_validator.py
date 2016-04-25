@@ -17,7 +17,8 @@ CHOICES = "Choices, Calculations, OR Slider Labels"
 TEXT_TYPE = "Text Validation Type OR Show Slider Number"
 TEXT_MIN = "Text Validation Min"
 TEXT_MAX = "Text Validation Max"
-HEADERS = [FIELD_NAME, FORM,FIELD_TYPE, FIELD_LABEL, CHOICES, TEXT_TYPE, TEXT_MIN, TEXT_MAX]
+HEADERS = [FIELD_NAME, FORM, FIELD_TYPE, FIELD_LABEL, CHOICES, TEXT_TYPE,
+           TEXT_MIN, TEXT_MAX]
 
 # TODO: make these fields more flexible for other validations
 FIXED_ROWS = ["subject", "arm", "visit"]
@@ -33,7 +34,9 @@ def checkHeaders(headers):
 
 
 def checkRow(row, number):
-    print "form: %s, field: %s, value type: %s" % (row[FORM], row[FIELD_NAME], row[FIELD_TYPE])
+    print "form: %s, field: %s, value type: %s" % (row[FORM],
+                                                   row[FIELD_NAME],
+                                                   row[FIELD_TYPE])
     checkValueType(row)
 
 
@@ -88,7 +91,8 @@ def validateNumericRange(lowStr, highStr):
         high = float(highStr)
         if high < low:
             retVal = True
-            print "  Max value (%s) should not be less than min value (%s)" % (highStr, lowStr)
+            print "  Max value (%s) should not be less than min value (%s)" % \
+                  (highStr, lowStr)
     else:
         print "WARNING: no maximum value set"
     return retVal
@@ -116,7 +120,8 @@ def process(dd, fixed_rows):
             tmpVal = checkRow(row, reader.line_num) or tmpVal
             if fixed_rows and tmpCounter < len(FIXED_ROWS):
                 if row[FIELD_NAME] != FIXED_ROWS[tmpCounter]:
-                    print "ERROR: field should be '%s' found '%s'" % (FIXED_ROWS[tmpCounter], row[FIELD_NAME])
+                    print "ERROR: field should be '%s' found '%s'" % \
+                          (FIXED_ROWS[tmpCounter], row[FIELD_NAME])
                     tmpVal = True
                 tmpCounter += 1
         if tmpVal:
