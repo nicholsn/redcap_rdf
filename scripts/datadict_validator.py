@@ -131,14 +131,14 @@ def process(dd, fixed_rows):
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadict",
-            help="the data dictionary csv file",
-            type=str)
+                        help="the data dictionary csv file",
+                        type=str)
     parser.add_argument("--fixed-rows",
-            help="applies an extra check to the first rows",
-            action="store_true")
+                        help="applies an extra check to the first rows",
+                        action="store_true")
     parser.add_argument("-v", "--verbose",
-            help="increase output verbosity",
-            action="store_true")
+                        help="increase output verbosity",
+                        action="store_true")
     args = parser.parse_args()
     process(args.datadict, args.fixed_rows)
 
