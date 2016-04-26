@@ -129,7 +129,7 @@ def process(dd, fixed_rows):
         tmp_val = False
         tmp_counter = 0
         for row in reader:
-            tmp_Val = check_row(row, reader.line_num) or tmp_val
+            tmp_val = check_row(row, reader.line_num) or tmp_val
             if fixed_rows and tmp_counter < len(FIXED_ROWS):
                 if row[FIELD_NAME] != FIXED_ROWS[tmp_counter]:
                     message = "ERROR: field should be '{}' found '{}'"
