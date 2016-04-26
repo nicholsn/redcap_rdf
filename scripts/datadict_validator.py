@@ -8,7 +8,7 @@ import csv
 import sys
 import argparse
 
-
+# Header columns for data dictionary
 FIELD_NAME = "Variable / Field Name"
 FORM = "Form Name"
 FIELD_TYPE = "Field Type"
@@ -25,6 +25,18 @@ FIXED_ROWS = ["subject", "arm", "visit"]
 
 
 def check_headers(headers):
+    """Verify Header Columns
+
+    Parameters
+    ----------
+    headers : iterable object
+        Instance of `csv.DictReader` for a REDCap data dictionary in csv format.
+
+    Returns
+    -------
+    bool
+        True indicates an error in the data dictionary header.
+    """
     ret_val = False
     for field in HEADERS:
         if field not in headers:
