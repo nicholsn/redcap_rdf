@@ -1,11 +1,13 @@
-API Reference
-=============
-This document details the redcap_rdf package API.
+# REDCap RDF
 
-Session Component
------------------
-```eval_rst
-.. automodule:: redcap_rdf.datdict_validator
-    :members:
-    :show-inheritance:
-```
+REDCap RDF is a Python library and commandline utility to extract and 
+transform data and data dictionaries from REDCap projects into the 
+Resource Description Framework.
+
+Contents
+--------
+* [API Reference](api.md)
+
+### Getting Started
+To use `redcap_rdf` you'll need to export the data and data dictionaries
+ from REDCap in csv format
