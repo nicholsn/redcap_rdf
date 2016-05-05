@@ -12,8 +12,11 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
+import sys
+
+from recommonmark.parser import CommonMarkParser
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -36,10 +39,15 @@ extensions = [
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
+# Parsers for source documents.
+source_parsers = {
+    '.md': CommonMarkParser,
+}
+
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
-source_suffix = '.md'
+source_suffix = ['.md']
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -49,7 +57,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'redcap_rdf'
-copyright = u'2016, Nolan Nichols'
+copyright = u'2016, SRI International'
 author = u'Nolan Nichols'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -57,7 +65,7 @@ author = u'Nolan Nichols'
 # built documents.
 #
 # The short X.Y version.
-version = u'0.0.1'
+version = u'0.0'
 # The full version, including alpha/beta/rc tags.
 release = u'0.0.1'
 
