@@ -1,5 +1,7 @@
 # REDCap RDF
 
+[![Circle CI](https://circleci.com/gh/sibis-platform/redcap_rdf.svg?style=svg)](https://circleci.com/gh/sibis-platform/redcap_rdf) [![Documentation Status](https://readthedocs.org/projects/redcap_rdf/badge/?version=latest)](http://redcap_rdf.readthedocs.org/en/latest/?badge=latest)
+
 REDCap RDF is a Python library and commandline utility to extract and 
 transform data and data dictionaries from REDCap projects into the 
 Resource Description Framework.
