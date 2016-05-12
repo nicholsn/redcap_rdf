@@ -98,27 +98,6 @@ class Transformer:
         self._add_prefix("owl", OWL)
         self._add_prefix("void", VOID)
         self._add_prefix("skos", SKOS)
-        self._add_prefix("admingeo",
-                         "http://data.ordnancesurvey.co.uk/ontology/admingeo/")
-        self._add_prefix("interval",
-                         "<http://reference.data.gov.uk/def/intervals/")
-
-        self._add_prefix("qb", "http://purl.org/linked-data/cube#")
-
-        self._add_prefix("sdmx-concept",
-                         "http://purl.org/linked-data/sdmx/2009/concept#")
-        self._add_prefix("sdmx-dimension",
-                         "http://purl.org/linked-data/sdmx/2009/dimension#")
-        self._add_prefix("sdmx-attribute",
-                         "http://purl.org/linked-data/sdmx/2009/attribute#")
-        self._add_prefix("sdmx-measure",
-                         "http://purl.org/linked-data/sdmx/2009/measure#")
-        self._add_prefix("sdmx-metadata",
-                         "http://purl.org/linked-data/sdmx/2009/metadata#")
-        self._add_prefix("sdmx-code",
-                         "http://purl.org/linked-data/sdmx/2009/code#")
-        self._add_prefix("sdmx-subject",
-                         "http://purl.org/linked-data/sdmx/2009/subject#")
 
         self._add_prefix("ncanda", "http://ncanda.sri.com/terms.ttl#")
         self._add_prefix("fma", "http://purl.org/sig/fma#")
