@@ -39,6 +39,9 @@ class Validator:
         Args:
             dd (str): Path to the data dictionary.
             first_rows (list): Performs extra checks on the header.
+
+        Returns:
+            None
         """
         if not os.path.isfile(dd):
             print("{} file not found".format(dd))
