@@ -57,14 +57,6 @@ class Validator:
 
     # check functions
     def _check_headers(self, headers):
-        """Verify Header Columns
-
-        Parameters
-        ----------
-        headers : iterable object
-            Instance of `csv.DictReader` for a REDCap data dictionary in csv
-            format.
-        """
         for field in HEADERS:
             if field not in headers:
                 msg = "Could not find: '{}' in the header".format(field)
