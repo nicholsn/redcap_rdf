@@ -123,6 +123,7 @@ class Transformer:
         self._add_prefix("prov", "http://w3c.org/ns/prov#")
         self._add_prefix("nidm", "http://purl.org/nidash/nidm#")
         self._add_prefix("fs", "http://www.incf.org/ns/nidash/fs#")
+        self._add_prefix("qb", "http://purl.org/linked-data/cube#")
 
         # add in builtins
         self._add_prefix("owl", OWL)
