@@ -1,7 +1,3 @@
-##
-##  See COPYING file distributed along with the redcap_rdf package for the
-##  copyright and license terms
-##
 """ Data Dictionary CSV Validator
 
 @author: Victor Meyerson
@@ -66,7 +62,8 @@ class Validator:
         Parameters
         ----------
         headers : iterable object
-            Instance of `csv.DictReader` for a REDCap data dictionary in csv format.
+            Instance of `csv.DictReader` for a REDCap data dictionary in csv
+            format.
         """
         for field in HEADERS:
             if field not in headers:
@@ -118,14 +115,25 @@ class Validator:
 
     def _validate_numeric_range(self, field, low_str, high_str):
         print("  Range: [{},{}]".format(low_str, high_str))
-        low = float(low_str)
-        if high_str != "":
-            high = float(high_str)
-            if high < low:
-                msg = "Max value ({}) should not be less than min value ({})"
-                self._append_error(field, msg.format(high_str, low_str))
+        if low_str:
+            low = float(low_str)
         else:
+            low = None
+        if high_str:
+            high = float(high_str)
+        else:
+            high = None
+        if high < low:
+            msg = "Max value ({}) should not be less than min value ({})"
+            self._append_error(field, msg.format(high_str, low_str))
+        elif not high:
             msg = "no maximum value set"
+            self._append_warning(field, msg)
+        elif not low:
+            msg = "no minimum value set"
+            self._append_warning(field, msg)
+        else:
+            msg = "no maximum or minimum value set"
             self._append_warning(field, msg)
 
     # accumulate messages
