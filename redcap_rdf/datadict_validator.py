@@ -22,12 +22,24 @@ HEADERS = [FIELD_NAME, FORM, FIELD_TYPE, FIELD_LABEL, CHOICES, TEXT_TYPE,
 
 
 class Validator:
+    """Performs validation of a REDCap Data Dictionary.
+
+    The validation outputs a summary of the missing information from a data
+    dictionary that is recommended to complete for conversion to RDF.
+
+    """
     def __init__(self):
         # clear internal data structures
         self._warnings = {}
         self._errors = {}
 
     def process(self, dd, first_rows):
+        """Runs the validation process.
+
+        Args:
+            dd (str): Path to the data dictionary.
+            first_rows (list): Performs extra checks on the header.
+        """
         if not os.path.isfile(dd):
             print("{} file not found".format(dd))
             return
