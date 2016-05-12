@@ -6,13 +6,13 @@
 
 @author: Victor Meyerson
 """
+import os
+import csv
+import sys
+import argparse
 
 from rdflib import Graph, Literal, Namespace
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
-import argparse
-import csv
-import os
-import sys
 
 # Header columns for data dictionary
 FIELD_NAME = "Variable / Field Name"
