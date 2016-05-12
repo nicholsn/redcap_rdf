@@ -95,10 +95,6 @@ class Transformer:
         self._ns_dict[prefix] = ns
 
     def _add_prefixes(self):
-        self._add_prefix("owl", OWL)
-        self._add_prefix("void", VOID)
-        self._add_prefix("skos", SKOS)
-
         self._add_prefix("ncanda", "http://ncanda.sri.com/terms.ttl#")
         self._add_prefix("fma", "http://purl.org/sig/fma#")
         self._add_prefix("prov", "http://w3c.org/ns/prov#")
@@ -106,6 +102,9 @@ class Transformer:
         self._add_prefix("fs", "http://www.incf.org/ns/nidash/fs#")
 
         # add in builtins
+        self._add_prefix("owl", OWL)
+        self._add_prefix("void", VOID)
+        self._add_prefix("skos", SKOS)
         self._add_prefix("rdf", RDF)
         self._add_prefix("rdfs", RDFS)
         self._add_prefix("xsd", XSD)
