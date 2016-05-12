@@ -32,6 +32,12 @@ UNITS = "units"
 
 
 class Transformer:
+    """Class that transforms a data dictionary into RDF.
+
+    Transforms a data dictionary into the an RDF Data Cube Data Structure
+    Definition graph.
+
+    """
     def __init__(self):
         # clear internal data structures
         self._g = Graph()
@@ -40,6 +46,17 @@ class Transformer:
         self._add_prefixes()
 
     def build_graph(self, dd, config):
+        """Constructs a graph from the data dictionary using a config file.
+
+        Args:
+            dd (str): Path to the data dictionary csv file.
+            config (str): Path to a csv formatted config with supplementary
+                information file.
+
+        Returns:
+            None
+
+        """
         self._build_config_lookup(config)
         if not os.path.isfile(dd):
             print("{} file not found".format(dd))
@@ -81,6 +98,12 @@ class Transformer:
         # self._display_raw_triples(self._g)
 
     def display_graph(self):
+        """Print the RDF file to stdout in turtle format.
+
+        Returns:
+            None
+
+        """
         print(self._g.serialize(format='n3'))
 
     def _display_raw_triples(self, g):
