@@ -6,13 +6,13 @@
 
 @author: Victor Meyerson
 """
-
-from rdflib import Graph, Literal, BNode, Namespace
-from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
-import argparse
-import csv
 import os
+import csv
 import sys
+import argparse
+
+from rdflib import Graph, Literal, Namespace
+from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
 
 # Header columns for data dictionary
 FIELD_NAME = "Variable / Field Name"
@@ -32,6 +32,12 @@ UNITS = "units"
 
 
 class Transformer:
+    """Class that transforms a data dictionary into RDF.
+
+    Transforms a data dictionary into the an RDF Data Cube Data Structure
+    Definition graph.
+
+    """
     def __init__(self):
         # clear internal data structures
         self._g = Graph()
@@ -40,6 +46,17 @@ class Transformer:
         self._add_prefixes()
 
     def build_graph(self, dd, config):
+        """Constructs a graph from the data dictionary using a config file.
+
+        Args:
+            dd (str): Path to the data dictionary csv file.
+            config (str): Path to a csv formatted config with supplementary
+                information file.
+
+        Returns:
+            None
+
+        """
         self._build_config_lookup(config)
         if not os.path.isfile(dd):
             print("{} file not found".format(dd))
@@ -59,35 +76,41 @@ class Transformer:
             reader = csv.DictReader(f)
             for row in reader:
                 field_name = row[FIELD_NAME]
-                node = BNode()
+                # TODO: Use Field Label if available else field_name.split('_')
+                # and capitalize and join with a space.
+                node = self._get_ns("ncanda")[field_name]
                 self._g.add((node, rdfs_label, Literal(field_name)))
                 prop = measure_property
                 if (field_name in self._config_dict and
                         DIMENSION in self._config_dict[field_name]):
-                    if (self._config_dict[field_name][DIMENSION] == "y"):
+                    if self._config_dict[field_name][DIMENSION] == "y":
                         prop = dimension_property
                 self._g.add((node, rdf_property, prop))
                 if (field_name in self._config_dict and
                         CONCEPT in self._config_dict[field_name]):
-                    self._g.add((node,
-                                 concept,
-                                 self._get_term(self._config_dict[field_name][CONCEPT])))
+                    obj = self._get_term(self._config_dict[field_name][CONCEPT])
+                    self._g.add((node, concept, obj))
                 if (field_name in self._config_dict and
                         UNITS in self._config_dict[field_name]):
-                    self._g.add((node,
-                                 rdfs_range,
-                                 self._get_term(self._config_dict[field_name][UNITS])))
+                    obj = self._get_term(self._config_dict[field_name][UNITS])
+                    self._g.add((node, rdfs_range, obj))
 
         # self._display_raw_triples(self._g)
 
     def display_graph(self):
+        """Print the RDF file to stdout in turtle format.
+
+        Returns:
+            None
+
+        """
         print(self._g.serialize(format='n3'))
 
     def _display_raw_triples(self, g):
         # Iterate over triples in store and print them out.
         print("--- printing raw triples ---")
         for s, p, o in g:
-            print((s, p, o))
+            print(s, p, o)
 
     def _add_prefix(self, prefix, namespace):
         ns = Namespace(namespace)
@@ -95,37 +118,25 @@ class Transformer:
         self._ns_dict[prefix] = ns
 
     def _add_prefixes(self):
+        self._add_prefix("ncanda", "http://ncanda.sri.com/terms.ttl#")
+        self._add_prefix("fma", "http://purl.org/sig/fma#")
+        self._add_prefix("prov", "http://w3c.org/ns/prov#")
+        self._add_prefix("nidm", "http://purl.org/nidash/nidm#")
+        self._add_prefix("fs", "http://www.incf.org/ns/nidash/fs#")
+        self._add_prefix("qb", "http://purl.org/linked-data/cube#")
+
+        # add in builtins
         self._add_prefix("owl", OWL)
         self._add_prefix("void", VOID)
         self._add_prefix("skos", SKOS)
-        self._add_prefix("admingeo", "http://data.ordnancesurvey.co.uk/ontology/admingeo/")
-        self._add_prefix("interval", "<http://reference.data.gov.uk/def/intervals/")
-
-        self._add_prefix("qb",       "http://purl.org/linked-data/cube#")
-
-        self._add_prefix("sdmx-concept",    "http://purl.org/linked-data/sdmx/2009/concept#")
-        self._add_prefix("sdmx-dimension",  "http://purl.org/linked-data/sdmx/2009/dimension#")
-        self._add_prefix("sdmx-attribute",  "http://purl.org/linked-data/sdmx/2009/attribute#")
-        self._add_prefix("sdmx-measure",    "http://purl.org/linked-data/sdmx/2009/measure#")
-        self._add_prefix("sdmx-metadata",   "http://purl.org/linked-data/sdmx/2009/metadata#")
-        self._add_prefix("sdmx-code",       "http://purl.org/linked-data/sdmx/2009/code#")
-        self._add_prefix("sdmx-subject",    "http://purl.org/linked-data/sdmx/2009/subject#")
-
-        self._add_prefix("ncanda",   "http://ncanda.sri.com/terms.ttl#")
-        self._add_prefix("fma",      "http://purl.org/sig/fma#")
-        self._add_prefix("prov",     "http://w3c.org/ns/prov#")
-        self._add_prefix("nidm",     "http://purl.org/nidash/nidm#")
-        self._add_prefix("fs",       "http://www.incf.org/ns/nidash/fs#")
-
-        # add in builtins
-        self._add_prefix("rdf",      RDF)
-        self._add_prefix("rdfs",     RDFS)
-        self._add_prefix("xsd",      XSD)
-        self._add_prefix("dct",      DCTERMS)
-        self._add_prefix("foaf",     FOAF)
+        self._add_prefix("rdf", RDF)
+        self._add_prefix("rdfs", RDFS)
+        self._add_prefix("xsd", XSD)
+        self._add_prefix("dct", DCTERMS)
+        self._add_prefix("foaf", FOAF)
 
         # placeholder
-        self._add_prefix("ph",      "file:///placeholder#")
+        self._add_prefix("ph", "file:///placeholder#")
 
     def _get_ns(self, prefix):
         if prefix in self._ns_dict:

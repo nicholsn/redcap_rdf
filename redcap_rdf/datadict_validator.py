@@ -1,7 +1,3 @@
-##
-##  See COPYING file distributed along with the redcap_rdf package for the
-##  copyright and license terms
-##
 """ Data Dictionary CSV Validator
 
 @author: Victor Meyerson
@@ -26,12 +22,27 @@ HEADERS = [FIELD_NAME, FORM, FIELD_TYPE, FIELD_LABEL, CHOICES, TEXT_TYPE,
 
 
 class Validator:
+    """Performs validation of a REDCap Data Dictionary.
+
+    The validation outputs a summary of the missing information from a data
+    dictionary that is recommended to complete for conversion to RDF.
+
+    """
     def __init__(self):
         # clear internal data structures
         self._warnings = {}
         self._errors = {}
 
     def process(self, dd, first_rows):
+        """Runs the validation process.
+
+        Args:
+            dd (str): Path to the data dictionary.
+            first_rows (list): Performs extra checks on the header.
+
+        Returns:
+            None
+        """
         if not os.path.isfile(dd):
             print("{} file not found".format(dd))
             return
@@ -61,13 +72,6 @@ class Validator:
 
     # check functions
     def _check_headers(self, headers):
-        """Verify Header Columns
-
-        Parameters
-        ----------
-        headers : iterable object
-            Instance of `csv.DictReader` for a REDCap data dictionary in csv format.
-        """
         for field in HEADERS:
             if field not in headers:
                 msg = "Could not find: '{}' in the header".format(field)
@@ -118,14 +122,25 @@ class Validator:
 
     def _validate_numeric_range(self, field, low_str, high_str):
         print("  Range: [{},{}]".format(low_str, high_str))
-        low = float(low_str)
-        if high_str != "":
-            high = float(high_str)
-            if high < low:
-                msg = "Max value ({}) should not be less than min value ({})"
-                self._append_error(field, msg.format(high_str, low_str))
+        if low_str:
+            low = float(low_str)
         else:
+            low = None
+        if high_str:
+            high = float(high_str)
+        else:
+            high = None
+        if high < low:
+            msg = "Max value ({}) should not be less than min value ({})"
+            self._append_error(field, msg.format(high_str, low_str))
+        elif not high:
             msg = "no maximum value set"
+            self._append_warning(field, msg)
+        elif not low:
+            msg = "no minimum value set"
+            self._append_warning(field, msg)
+        else:
+            msg = "no maximum or minimum value set"
             self._append_warning(field, msg)
 
     # accumulate messages
