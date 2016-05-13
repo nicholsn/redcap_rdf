@@ -1,0 +1,5 @@
+Variable / Field Name,dimension,concept,categories,units
+site,y,nidm:participant,,
+arm,y,fma:Hemisphere,,xsd:string
+visit,y,nidm:StudyEvent,,xsd:float
+sex,,,"Male|Female",xsd:string
