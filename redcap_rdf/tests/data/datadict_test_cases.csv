@@ -1,0 +1,7 @@
+Variable / Field Name,Form Name,Section Header,Field Type,Field Label,"Choices, Calculations, OR Slider Labels",Field Note,Text Validation Type OR Show Slider Number,Text Validation Min,Text Validation Max,Identifier?,Branching Logic (Show field only if...),Required Field?,Custom Alignment,Question Number (surveys only),Matrix Group Name,Matrix Ranking?
+missing_field_type,validator,,,Missing Field Type,,,,,,,,,,,,
+missing_field_label,validator,,text,,,,,,,,,,,,,
+missing_choices,validator,,dropdown,Missing Choices,,,,,,,,,,,,
+missing_min,validator,,text,Missing Min,,,number,,10,,,,,,,
+missing_max,validator,,text,Missing Max,,,number,0,,,,,,,,
+incorrect_field_type,validator,,incorrect,Incorrect Field Type,,,,,,,,,,,,
