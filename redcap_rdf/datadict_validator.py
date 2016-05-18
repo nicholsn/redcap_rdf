@@ -51,7 +51,7 @@ class Validator(object):
         if self.verbose:
             print("Processing: {}".format(dd))
 
-        if len(first_rows) > 0:
+        if first_rows and self.verbose:
             print("Running extra check for first rows")
 
         with open(dd) as f:
@@ -198,15 +198,15 @@ def csv_to_list(arg):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadict",
-                        help="the data dictionary csv file",
+                        help="The data dictionary csv file.",
                         required=True,
                         type=str)
     parser.add_argument("--first-rows",
-                        help="applies an extra check to the first rows",
+                        help="Applies an extra check to the first rows.",
                         type=csv_to_list,
                         default=[])
     parser.add_argument("-v", "--verbose",
-                        help="increase output verbosity",
+                        help="Increase output verbosity.",
                         action="store_true")
     args = parser.parse_args()
     validator = Validator()
