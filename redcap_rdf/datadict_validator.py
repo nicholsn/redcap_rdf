@@ -187,6 +187,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadict",
                         help="the data dictionary csv file",
+                        required=True,
                         type=str)
     parser.add_argument("--first-rows",
                         help="applies an extra check to the first rows",
