@@ -71,7 +71,8 @@ class Validator(object):
                                              row[FIELD_NAME])
                         self._append_error(row[FIELD_NAME], msg)
                     tmp_counter += 1
-        self._print_summary()
+        if self.verbose:
+            self._print_summary()
 
     def enable_verbose(self):
         """
@@ -91,8 +92,9 @@ class Validator(object):
 
     def _check_row(self, row, number):
         message = "form: {}, field: {}, value type: {}, line: {}"
-        print(message.format(row[FORM], row[FIELD_NAME],
-                             row[FIELD_TYPE], number))
+        if self.verbose:
+            print(message.format(row[FORM], row[FIELD_NAME],
+                                 row[FIELD_TYPE], number))
         self._check_value_type(row)
 
     def _check_value_type(self, row):
@@ -125,7 +127,9 @@ class Validator(object):
             self._append_error(field, msg)
 
     def _validate_text(self, field, row):
-        print("  Item: {} is a {}".format(row[FIELD_NAME], row[TEXT_TYPE]))
+        if self.verbose:
+            print("  Item: {} is a '{}'".format(row[FIELD_NAME],
+                                                row[TEXT_TYPE]))
         if row[TEXT_TYPE] == "number":
             self._validate_numeric_range(field, row[TEXT_MIN], row[TEXT_MAX])
         else:
@@ -133,7 +137,8 @@ class Validator(object):
             self._append_warning(field, msg)
 
     def _validate_numeric_range(self, field, low_str, high_str):
-        print("  Range: [{},{}]".format(low_str, high_str))
+        if self.verbose:
+            print("  Range: [{},{}]".format(low_str, high_str))
         if low_str:
             low = float(low_str)
         else:
