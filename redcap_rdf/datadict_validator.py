@@ -47,7 +47,9 @@ class Validator(object):
         if not os.path.isfile(dd):
             print("{} file not found".format(dd))
             return
-        print("Processing: {}".format(dd))
+
+        if self.verbose:
+            print("Processing: {}".format(dd))
 
         if len(first_rows) > 0:
             print("Running extra check for first rows")
@@ -208,6 +210,8 @@ def main():
                         action="store_true")
     args = parser.parse_args()
     validator = Validator()
+    if args.verbose:
+        validator.enable_verbose()
     validator.process(args.datadict, args.first_rows)
 
 
