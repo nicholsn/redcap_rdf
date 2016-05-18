@@ -191,10 +191,6 @@ class Validator(object):
             for msg in msgs:
                 print("  {}".format(msg))
 
-    # 'private' member data
-    _warnings = {}
-    _errors = {}
-
 
 def csv_to_list(arg):
     return map(str, arg.split(','))
