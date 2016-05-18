@@ -21,7 +21,7 @@ HEADERS = [FIELD_NAME, FORM, FIELD_TYPE, FIELD_LABEL, CHOICES, TEXT_TYPE,
            TEXT_MIN, TEXT_MAX]
 
 
-class Validator:
+class Validator(object):
     """Performs validation of a REDCap Data Dictionary.
 
     The validation outputs a summary of the missing information from a data

@@ -31,7 +31,7 @@ CATEGORIES = "categories"
 UNITS = "units"
 
 
-class Transformer:
+class Transformer(object):
     """Class that transforms a data dictionary into RDF.
 
     Transforms a data dictionary into the an RDF Data Cube Data Structure
@@ -95,8 +95,6 @@ class Transformer:
                     obj = self._get_term(self._config_dict[field_name][UNITS])
                     self._g.add((node, rdfs_range, obj))
 
-        # self._display_raw_triples(self._g)
-
     def display_graph(self):
         """Print the RDF file to stdout in turtle format.
 
@@ -105,12 +103,6 @@ class Transformer:
 
         """
         print(self._g.serialize(format='n3'))
-
-    def _display_raw_triples(self, g):
-        # Iterate over triples in store and print them out.
-        print("--- printing raw triples ---")
-        for s, p, o in g:
-            print(s, p, o)
 
     def _add_prefix(self, prefix, namespace):
         ns = Namespace(namespace)
