@@ -39,7 +39,8 @@ class Validator(object):
 
         Args:
             dd (str): Path to the data dictionary.
-            first_rows (list): Performs extra checks on the header.
+            first_rows (list): Variable names that should start the dictionary
+                (e.g. subject, arm, visit)
 
         Returns:
             None
