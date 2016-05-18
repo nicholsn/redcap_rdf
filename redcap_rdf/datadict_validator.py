@@ -46,8 +46,7 @@ class Validator(object):
             None
         """
         if not os.path.isfile(dd):
-            print("{} file not found".format(dd))
-            return
+            raise(IOError("{} file not found".format(dd)))
 
         if self.verbose:
             print("Processing: {}".format(dd))
