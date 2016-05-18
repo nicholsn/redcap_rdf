@@ -32,6 +32,7 @@ class Validator(object):
         # clear internal data structures
         self._warnings = {}
         self._errors = {}
+        self.verbose = False
 
     def process(self, dd, first_rows):
         """Runs the validation process.
@@ -69,6 +70,15 @@ class Validator(object):
                         self._append_error(row[FIELD_NAME], msg)
                     tmp_counter += 1
         self._print_summary()
+
+    def enable_verbose(self):
+        """
+        Sets Verbose printing to True.
+
+        Returns:
+            None
+        """
+        self.verbose = True
 
     # check functions
     def _check_headers(self, headers):
