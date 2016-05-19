@@ -4,15 +4,24 @@
 ##
 import os
 
+import pytest
+
 from redcap_rdf.datadict_validator import Validator
 
-validator = Validator()
 datadict = os.path.join(os.path.dirname(__file__),
                         'data',
                         'datadict_test_cases.csv')
 
 
+def test_file_exists():
+    validator = Validator()
+    fake_file = '/tmp/foo.csv'
+    with pytest.raises(IOError):
+        validator.process(fake_file, [])
+
+
 def test_check_headers():
+    validator = Validator()
     corrupt_header = os.path.join(os.path.dirname(__file__),
                                   'data',
                                   'datadict_corrupt_header.csv')
