@@ -136,8 +136,8 @@ class Validator(object):
     # validate various field type functions
     def _validate_dropdown(self, field, choices_str):
         choices = choices_str.split('|')
-        if len(choices) <= 1:
-            msg = "There should be more than one choice"
+        if not choices[0]:
+            msg = "There should be at least one choice."
             self._append_error(field, msg)
         for choice in choices:
             breakdown = choice.split(",")

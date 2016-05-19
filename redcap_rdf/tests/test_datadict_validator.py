@@ -43,3 +43,11 @@ def test_missing_field_label():
     case = "missing_field_label"
     code = "No label is present."
     assert code in validator.warnings.get(case)[0]
+
+
+def test_missing_choices():
+    validator = Validator()
+    validator.process(datadict, [])
+    case = "missing_choices"
+    code = "There should be at least one choice."
+    assert code in validator.errors.get(case)[0]
