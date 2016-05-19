@@ -36,3 +36,10 @@ def test_missing_field_type():
     code = "Skipping validation of type"
     assert code in validator.warnings.get(case)[0]
 
+
+def test_missing_field_label():
+    validator = Validator()
+    validator.process(datadict, [])
+    case = "missing_field_label"
+    code = "No label is present."
+    assert code in validator.warnings.get(case)[0]
