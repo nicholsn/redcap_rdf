@@ -163,11 +163,11 @@ class Validator(object):
     def _validate_numeric_range(self, field, low_str, high_str):
         if self.verbose:
             print("  Range: [{},{}]".format(low_str, high_str))
-        if low_str:
+        if len(low_str):
             low = float(low_str)
         else:
             low = None
-        if high_str:
+        if len(high_str):
             high = float(high_str)
         else:
             high = None
@@ -175,13 +175,13 @@ class Validator(object):
             msg = "Max value ({}) should not be less than min value ({})"
             self._append_error(field, msg.format(high_str, low_str))
         elif not high:
-            msg = "no maximum value set"
+            msg = "No maximum value set."
             self._append_warning(field, msg)
         elif not low:
-            msg = "no minimum value set"
+            msg = "No minimum value set."
             self._append_warning(field, msg)
         else:
-            msg = "no maximum or minimum value set"
+            msg = "no maximum or minimum value set."
             self._append_warning(field, msg)
 
     # accumulate messages
