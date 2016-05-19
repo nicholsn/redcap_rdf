@@ -59,3 +59,11 @@ def test_missing_min():
     case = "missing_min"
     code = "No minimum value set."
     assert code in validator.warnings.get(case)[0]
+
+
+def test_missing_max():
+    validator = Validator()
+    validator.process(datadict, [])
+    case = "missing_max"
+    code = "No maximum value set."
+    assert code in validator.warnings.get(case)[0]

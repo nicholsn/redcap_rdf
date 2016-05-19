@@ -171,7 +171,7 @@ class Validator(object):
             high = float(high_str)
         else:
             high = None
-        if high < low:
+        if high and high < low:
             msg = "Max value ({}) should not be less than min value ({})"
             self._append_error(field, msg.format(high_str, low_str))
         elif not high:
