@@ -215,7 +215,7 @@ class Validator(object):
         self._print_details(self._warnings)
 
     def _print_details(self, ds):
-        for (field, msgs) in ds.items():
+        for field, msgs in ds.items():
             print("Field: '{}'".format(field))
             for msg in msgs:
                 print("  {}".format(msg))

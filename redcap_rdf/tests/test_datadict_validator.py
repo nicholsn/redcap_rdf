@@ -26,7 +26,16 @@ def test_check_headers():
                                   'data',
                                   'datadict_corrupt_header.csv')
     validator.process(corrupt_header, [])
-    assert 'HEADERS' in validator.errors.keys()
+    code = "HEADERS"
+    assert code in validator.errors.keys()
+
+
+def test_check_first_rows():
+    validator = Validator()
+    case = "FAKE_FIRST_ROW"
+    code = "field should be"
+    validator.process(datadict, [case])
+    assert code in validator.errors.get('missing_field_type')[0]
 
 
 def test_missing_field_type():
@@ -75,6 +84,14 @@ def test_missing_max_min():
     case = "missing_max_min"
     code = "No maximum or minimum value set."
     assert code in validator.warnings.get(case)[0]
+
+
+def test_incorrect_max_lt_min():
+    validator = Validator()
+    validator.process(datadict, [])
+    case = "incorrect_max_lt_min"
+    code = "should not be less than min"
+    assert code in validator.errors.get(case)[0]
 
 
 def test_incorrect_field_type():
