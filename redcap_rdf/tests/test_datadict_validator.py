@@ -75,3 +75,11 @@ def test_missing_max_min():
     case = "missing_max_min"
     code = "No maximum or minimum value set."
     assert code in validator.warnings.get(case)[0]
+
+
+def test_incorrect_field_type():
+    validator = Validator()
+    validator.process(datadict, [])
+    case = "incorrect_field_type"
+    code = "Skipping validation of type"
+    assert code in validator.warnings.get(case)[0]
