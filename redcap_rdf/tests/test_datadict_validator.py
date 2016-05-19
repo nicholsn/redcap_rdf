@@ -4,11 +4,17 @@
 ##
 import os
 
-from redcap_rdf import datadict_validator
+from redcap_rdf.datadict_validator import Validator
+
+validator = Validator()
+datadict = os.path.join(os.path.dirname(__file__),
+                        'data',
+                        'datadict_test_cases.csv')
 
 
 def test_check_headers():
-    datadict = os.path.join(os.path.dirname(__file__),
-                            'data', 'datadict_test_cases.csv')
-    validator = datadict_validator.Validator()
-    assert validator.process(datadict, []) is None
+    corrupt_header = os.path.join(os.path.dirname(__file__),
+                                  'data',
+                                  'datadict_corrupt_header.csv')
+    validator.process(corrupt_header, [])
+    assert 'HEADERS' in validator.errors.keys()
