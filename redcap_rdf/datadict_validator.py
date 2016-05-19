@@ -75,13 +75,30 @@ class Validator(object):
             self._print_summary()
 
     def enable_verbose(self):
-        """
-        Sets Verbose printing to True.
+        """Sets Verbose printing to True.
 
         Returns:
             None
         """
         self.verbose = True
+
+    @property
+    def errors(self):
+        """Get reported errors.
+
+        Returns:
+            A dict of errors.
+        """
+        return self._errors
+
+    @property
+    def warnings(self):
+        """Get reported warnings.
+
+        Returns:
+            A dict of warnings.
+        """
+        return self._warnings
 
     # check functions
     def _check_headers(self, headers):
