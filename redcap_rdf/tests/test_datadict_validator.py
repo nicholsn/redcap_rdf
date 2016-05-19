@@ -27,3 +27,12 @@ def test_check_headers():
                                   'datadict_corrupt_header.csv')
     validator.process(corrupt_header, [])
     assert 'HEADERS' in validator.errors.keys()
+
+
+def test_missing_field_type():
+    validator = Validator()
+    validator.process(datadict, [])
+    case = "missing_field_type"
+    code = "Skipping validation of type"
+    assert code in validator.warnings.get(case)[0]
+
