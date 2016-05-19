@@ -112,7 +112,14 @@ class Validator(object):
         if self.verbose:
             print(message.format(row[FORM], row[FIELD_NAME],
                                  row[FIELD_TYPE], number))
+        self._check_label_exists(row)
         self._check_value_type(row)
+
+    def _check_label_exists(self, row):
+        label = row[FIELD_LABEL]
+        if not label:
+            msg = "No label is present."
+            self._append_warning(row[FIELD_NAME], msg)
 
     def _check_value_type(self, row):
         if row[FIELD_TYPE] == "dropdown":
