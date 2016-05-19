@@ -21,7 +21,7 @@ HEADERS = [FIELD_NAME, FORM, FIELD_TYPE, FIELD_LABEL, CHOICES, TEXT_TYPE,
            TEXT_MIN, TEXT_MAX]
 
 
-class Validator:
+class Validator(object):
     """Performs validation of a REDCap Data Dictionary.
 
     The validation outputs a summary of the missing information from a data
@@ -32,23 +32,26 @@ class Validator:
         # clear internal data structures
         self._warnings = {}
         self._errors = {}
+        self.verbose = False
 
     def process(self, dd, first_rows):
         """Runs the validation process.
 
         Args:
             dd (str): Path to the data dictionary.
-            first_rows (list): Performs extra checks on the header.
+            first_rows (list): Variable names that should start the dictionary
+                (e.g. subject, arm, visit)
 
         Returns:
             None
         """
         if not os.path.isfile(dd):
-            print("{} file not found".format(dd))
-            return
-        print("Processing: {}".format(dd))
+            raise(IOError("{} file not found".format(dd)))
 
-        if len(first_rows) > 0:
+        if self.verbose:
+            print("Processing: {}".format(dd))
+
+        if first_rows and self.verbose:
             print("Running extra check for first rows")
 
         with open(dd) as f:
@@ -68,7 +71,34 @@ class Validator:
                                              row[FIELD_NAME])
                         self._append_error(row[FIELD_NAME], msg)
                     tmp_counter += 1
-        self._print_summary()
+        if self.verbose:
+            self._print_summary()
+
+    def enable_verbose(self):
+        """Sets Verbose printing to True.
+
+        Returns:
+            None
+        """
+        self.verbose = True
+
+    @property
+    def errors(self):
+        """Get reported errors.
+
+        Returns:
+            A dict of errors.
+        """
+        return self._errors
+
+    @property
+    def warnings(self):
+        """Get reported warnings.
+
+        Returns:
+            A dict of warnings.
+        """
+        return self._warnings
 
     # check functions
     def _check_headers(self, headers):
@@ -79,9 +109,17 @@ class Validator:
 
     def _check_row(self, row, number):
         message = "form: {}, field: {}, value type: {}, line: {}"
-        print(message.format(row[FORM], row[FIELD_NAME],
-                             row[FIELD_TYPE], number))
+        if self.verbose:
+            print(message.format(row[FORM], row[FIELD_NAME],
+                                 row[FIELD_TYPE], number))
+        self._check_label_exists(row)
         self._check_value_type(row)
+
+    def _check_label_exists(self, row):
+        label = row[FIELD_LABEL]
+        if not label:
+            msg = "No label is present."
+            self._append_warning(row[FIELD_NAME], msg)
 
     def _check_value_type(self, row):
         if row[FIELD_TYPE] == "dropdown":
@@ -98,8 +136,8 @@ class Validator:
     # validate various field type functions
     def _validate_dropdown(self, field, choices_str):
         choices = choices_str.split('|')
-        if len(choices) <= 1:
-            msg = "There should be more than one choice"
+        if not choices[0]:
+            msg = "There should be at least one choice."
             self._append_error(field, msg)
         for choice in choices:
             breakdown = choice.split(",")
@@ -113,7 +151,9 @@ class Validator:
             self._append_error(field, msg)
 
     def _validate_text(self, field, row):
-        print("  Item: {} is a {}".format(row[FIELD_NAME], row[TEXT_TYPE]))
+        if self.verbose:
+            print("  Item: {} is a '{}'".format(row[FIELD_NAME],
+                                                row[TEXT_TYPE]))
         if row[TEXT_TYPE] == "number":
             self._validate_numeric_range(field, row[TEXT_MIN], row[TEXT_MAX])
         else:
@@ -121,7 +161,9 @@ class Validator:
             self._append_warning(field, msg)
 
     def _validate_numeric_range(self, field, low_str, high_str):
-        print("  Range: [{},{}]".format(low_str, high_str))
+        if self.verbose:
+            print("  Range: [{},{}]".format(low_str, high_str))
+        # Parse into None or float.
         if low_str:
             low = float(low_str)
         else:
@@ -130,17 +172,21 @@ class Validator:
             high = float(high_str)
         else:
             high = None
-        if high < low:
-            msg = "Max value ({}) should not be less than min value ({})"
-            self._append_error(field, msg.format(high_str, low_str))
-        elif not high:
-            msg = "no maximum value set"
-            self._append_warning(field, msg)
-        elif not low:
-            msg = "no minimum value set"
-            self._append_warning(field, msg)
+        # Check for range issues.
+        if type(high) is float and type(low) is float:
+            if high < low:
+                msg = "Max value ({}) should not be less than min value ({})."
+                self._append_error(field, msg.format(high_str, low_str))
+        elif type(high) is float:
+            if not low:
+                msg = "No minimum value set."
+                self._append_warning(field, msg)
+        elif type(low) is float:
+            if not high:
+                msg = "No maximum value set."
+                self._append_warning(field, msg)
         else:
-            msg = "no maximum or minimum value set"
+            msg = "No maximum or minimum value set."
             self._append_warning(field, msg)
 
     # accumulate messages
@@ -169,14 +215,10 @@ class Validator:
         self._print_details(self._warnings)
 
     def _print_details(self, ds):
-        for (field, msgs) in ds.items():
+        for field, msgs in ds.items():
             print("Field: '{}'".format(field))
             for msg in msgs:
                 print("  {}".format(msg))
-
-    # 'private' member data
-    _warnings = {}
-    _errors = {}
 
 
 def csv_to_list(arg):
@@ -186,17 +228,20 @@ def csv_to_list(arg):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadict",
-                        help="the data dictionary csv file",
+                        help="The data dictionary csv file.",
+                        required=True,
                         type=str)
     parser.add_argument("--first-rows",
-                        help="applies an extra check to the first rows",
+                        help="Applies an extra check to the first rows.",
                         type=csv_to_list,
                         default=[])
     parser.add_argument("-v", "--verbose",
-                        help="increase output verbosity",
+                        help="Increase output verbosity.",
                         action="store_true")
     args = parser.parse_args()
     validator = Validator()
+    if args.verbose:
+        validator.enable_verbose()
     validator.process(args.datadict, args.first_rows)
 
 
