@@ -83,3 +83,10 @@ def test_incorrect_field_type():
     case = "incorrect_field_type"
     code = "Skipping validation of type"
     assert code in validator.warnings.get(case)[0]
+
+
+def test_correct_choice():
+    validator = Validator()
+    validator.process(datadict, [])
+    case = "correct_choice"
+    assert case not in validator.warnings.keys()
