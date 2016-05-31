@@ -5,8 +5,6 @@
 
 import os
 import csv
-import sys
-import argparse
 
 # Header columns for data dictionary
 FIELD_NAME = "Variable / Field Name"
@@ -223,27 +221,3 @@ class Validator(object):
 
 def csv_to_list(arg):
     return map(str, arg.split(','))
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--datadict",
-                        help="The data dictionary csv file.",
-                        required=True,
-                        type=str)
-    parser.add_argument("--first-rows",
-                        help="Applies an extra check to the first rows.",
-                        type=csv_to_list,
-                        default=[])
-    parser.add_argument("-v", "--verbose",
-                        help="Increase output verbosity.",
-                        action="store_true")
-    args = parser.parse_args()
-    validator = Validator()
-    if args.verbose:
-        validator.enable_verbose()
-    validator.process(args.datadict, args.first_rows)
-
-
-if __name__ == "__main__":
-    sys.exit(main())
