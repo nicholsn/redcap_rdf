@@ -8,8 +8,6 @@
 """
 import os
 import csv
-import sys
-import argparse
 
 from rdflib import Graph, Literal, Namespace
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
@@ -157,25 +155,3 @@ class Transformer(object):
     _g = Graph()
     _ns_dict = {}
     _config_dict = {}
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--datadict",
-                        help="the data dictionary csv file",
-                        type=str)
-    parser.add_argument("-c", "--config",
-                        help="a json config file",
-                        type=str)
-    parser.add_argument("-v", "--verbose",
-                        help="increase output verbosity",
-                        action="store_true")
-    args = parser.parse_args()
-
-    transformer = Transformer()
-    transformer.build_graph(args.datadict, args.config)
-    transformer.display_graph()
-
-
-if __name__ == "__main__":
-    sys.exit(main())
