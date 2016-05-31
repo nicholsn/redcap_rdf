@@ -20,4 +20,9 @@ setup(name='redcap_rdf',
                       'recommonmark',
                       'sphinxcontrib-napoleon'],
       tests_require=['pytest', 'coverage'],
+      entry_points={
+          'console_scripts': [
+              'redcap_rdf = redcap_rdf.cli:cli'
+          ]
+      },
       scripts=[])
