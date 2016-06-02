@@ -1,5 +1,8 @@
-Variable / Field Name,dimension,concept,categories,units
-site,y,nidm:participant,,
-arm,y,fma:Hemisphere,,xsd:string
-visit,y,nidm:StudyEvent,,xsd:float
-sex,,,"Male|Female",xsd:string
+Variable / Field Name,dimension,concept,datatype,statistic,categories
+subject,y,http://sibis.sri.com/terms#Subject,http://www.w3.org/2001/XMLSchema#string,http://purl.obolibrary.org/obo/STATO_0000578,
+arm,y,http://sibis.sri.com/terms#Arm,http://www.w3.org/2001/XMLSchema#string,http://purl.obolibrary.org/obo/STATO_0000252, http://sibis.sri.com/terms#StandardArm
+visit,y,http://sibis.sri.com/terms#Visit,http://www.w3.org/2001/XMLSchema#string,http://purl.obolibrary.org/obo/STATO_0000252, http://sibis.sri.com/terms#Standard|http://sibis.sri.com/terms#FollowupYear1
+site,,http://sibis.sri.com/terms#Site,http://www.w3.org/2001/XMLSchema#string,http://purl.obolibrary.org/obo/STATO_0000252, http://sibis.sri.com/terms#SiteA|http://sibis.sri.com/terms#SiteB
+sex,,http://sibis.sri.com/terms#Sex,http://www.w3.org/2001/XMLSchema#anyURI,http://purl.obolibrary.org/obo/STATO_0000252, http://sibis.sri.com/terms#Male|http://sibis.sri.com/terms#Female
+visit_age,,http://sibis.sri.com/terms#VisitAge,http://www.w3.org/2001/XMLSchema#float,http://purl.obolibrary.org/obo/IAO_0000122,
+race,,http://sibis.sri.com/terms#Race,http://www.w3.org/2001/XMLSchema#anyURI,http://purl.obolibrary.org/obo/STATO_0000252,http://sibis.sri.com/terms#AftricanAmerican|http://sibis.sri.com/terms#Asian|http://sibis.sri.com/terms#Caucasian
