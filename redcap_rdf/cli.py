@@ -45,9 +45,14 @@ def validate(datadict, first_lines, verbose):
 @click.option("--mapping",
               help="The mapping file.",
               type=str)
-def create(datadict, mapping):
+@click.option("--metadata",
+              help="Dataset metadata",
+              type=str,
+              default="")
+def create(datadict, mapping, metadata):
     transformer = Transformer()
     transformer.build_graph(datadict, mapping)
+    transformer.add_metadata(metadata)
     transformer.display_graph()
 
 if __name__ == '__main__':

@@ -94,6 +94,22 @@ class Transformer(object):
                     obj = self._get_term(self._config_dict[field_name][UNITS])
                     self._g.add((node, rdfs_range, obj))
 
+    def add_metadata(self, metadata_path):
+        """Adds the dataset metadata to the graph
+
+        Args:
+            metadata_path (str): Path to a csv formatted file with the dataset
+                metadata
+
+        Returns:
+            None
+
+        """
+        if not os.path.isfile(metadata_path):
+            print("{} file not found".format(metadata_path))
+            return
+        print("Metadata processing: {}".format(metadata_path))
+
     def display_graph(self):
         """Print the RDF file to stdout in turtle format.
 
