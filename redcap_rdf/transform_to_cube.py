@@ -29,6 +29,15 @@ CATEGORIES = "categories"
 STATISTIC = "statistic"
 UNITS = "units"
 
+# Header columns for metadata
+DATASET_ID = "dataset_id"
+TITLE = "title"
+DESCRIPTION = "description"
+PUBLISHER = "publisher"
+ISSUED = "issued"
+SUBJECT = "subject"
+METADATA_HEADERS = [DATASET_ID, TITLE, DESCRIPTION, PUBLISHER, ISSUED, SUBJECT]
+
 
 class Transformer(object):
     """Class that transforms a data dictionary into RDF.
@@ -109,6 +118,33 @@ class Transformer(object):
             print("{} file not found".format(metadata_path))
             return
         print("Metadata processing: {}".format(metadata_path))
+
+        # constants
+        dataset = self._get_ns("qb")["DataSet"]
+        title = self._get_ns("dct")["title"]
+        description = self._get_ns("dct")["description"]
+        publisher = self._get_ns("dct")["publisher"]
+        issued = self._get_ns("dct")["issued"]
+        subject = self._get_ns("dct")["subject"]
+
+        with open(metadata_path) as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                md_dataset_id = row[DATASET_ID]
+                md_title = row[TITLE]
+                md_description = row[DESCRIPTION]
+                md_publisher = row[PUBLISHER]
+                md_issued = row[ISSUED]
+                md_subject = row[SUBJECT]
+
+                term = URIRef(md_dataset_id)
+                rdf_type = self._get_ns("rdf")["type"]
+                self._g.add((term, rdf_type, dataset))
+                self._g.add((term, title, Literal(md_title)))
+                self._g.add((term, description, Literal(md_description)))
+                self._g.add((term, publisher, Literal(md_publisher)))
+                self._g.add((term, issued, Literal(md_issued, datatype=XSD.date)))
+                self._g.add((term, subject, URIRef(md_subject)))
 
     def display_graph(self):
         """Print the RDF file to stdout in turtle format.
