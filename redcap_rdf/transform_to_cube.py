@@ -9,7 +9,7 @@
 import os
 import csv
 
-from rdflib import Graph, Literal, Namespace
+from rdflib import Graph, Literal, Namespace, URIRef
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
 
 # Header columns for data dictionary
@@ -22,10 +22,11 @@ TEXT_TYPE = "Text Validation Type OR Show Slider Number"
 TEXT_MIN = "Text Validation Min"
 TEXT_MAX = "Text Validation Max"
 
-# Header columns for config file
+# Header columns for mapping file
 DIMENSION = "dimension"
 CONCEPT = "concept"
 CATEGORIES = "categories"
+STATISTIC = "statistic"
 UNITS = "units"
 
 
@@ -86,7 +87,7 @@ class Transformer(object):
                 self._g.add((node, rdf_property, prop))
                 if (field_name in self._config_dict and
                         CONCEPT in self._config_dict[field_name]):
-                    obj = self._get_term(self._config_dict[field_name][CONCEPT])
+                    obj = URIRef(self._config_dict[field_name][CONCEPT])
                     self._g.add((node, concept, obj))
                 if (field_name in self._config_dict and
                         UNITS in self._config_dict[field_name]):
