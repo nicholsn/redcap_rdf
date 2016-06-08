@@ -146,6 +146,18 @@ class Transformer(object):
                 self._g.add((term, issued, Literal(md_issued, datatype=XSD.date)))
                 self._g.add((term, subject, URIRef(md_subject)))
 
+    def add_dsd(self, dimensions_csv):
+        """Adds data structure definition to the RDF graph
+
+        Args:
+            dimensions_csv (str): CSV string of dimensions
+
+        Returns:
+            None
+
+        """
+        print(dimensions_csv)
+
     def display_graph(self):
         """Print the RDF file to stdout in turtle format.
 

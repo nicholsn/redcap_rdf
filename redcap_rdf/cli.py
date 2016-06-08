@@ -49,10 +49,15 @@ def validate(datadict, first_lines, verbose):
               help="Dataset metadata",
               type=str,
               default="")
-def create(datadict, mapping, metadata):
+@click.option("--dimensions",
+              help="Comma separated keys that should be treated as dimensions",
+              type=str,
+              default="")
+def create(datadict, mapping, metadata, dimensions):
     transformer = Transformer()
     transformer.build_graph(datadict, mapping)
     transformer.add_metadata(metadata)
+    transformer.add_dsd(dimensions)
     transformer.display_graph()
 
 if __name__ == '__main__':
