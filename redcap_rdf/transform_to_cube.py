@@ -9,7 +9,7 @@
 import os
 import csv
 
-from rdflib import Graph, Literal, Namespace, URIRef
+from rdflib import BNode, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
 
 # Header columns for data dictionary
@@ -80,10 +80,12 @@ class Transformer(object):
         rdfs_subPropertyOf = self._get_ns("rdfs")["subPropertyOf"]
         rdfs_range = self._get_ns("rdfs")["range"]
 
+        self._datadict = os.path.basename(dd)
         with open(dd) as f:
             reader = csv.DictReader(f)
             for row in reader:
                 field_name = row[FIELD_NAME]
+                self._fields.append(field_name)
                 # TODO: Use Field Label if available else field_name.split('_')
                 # and capitalize and join with a space.
                 node = self._get_ns("ncanda")[field_name]
@@ -156,7 +158,65 @@ class Transformer(object):
             None
 
         """
-        print(dimensions_csv)
+        dd = URIRef(self._datadict)
+
+        # constants
+        rdf_type = self._get_ns("rdf")["type"]
+        dsd = self._get_ns("qb")["DataStructureDefinition"]
+        observation = self._get_ns("qb")["Observation"]
+        qb_slice = self._get_ns("qb")["Slice"]
+        component = self._get_ns("qb")["component"]
+        component_attachment = self._get_ns("qb")["componentAttachment"]
+        dimension = self._get_ns("qb")["dimension"]
+        order = self._get_ns("qb")["order"]
+        measure = self._get_ns("qb")["measure"]
+        slice_key = self._get_ns("qb")["sliceKey"]
+        component_property = self._get_ns("qb")["componentProperty"]
+
+        node = (dd, rdf_type, dsd)
+        self._g.add(node)
+
+        # add dimension
+        index = 1
+        # check that dimensions were passed
+        if 0 < len(dimensions_csv):
+            dimensions = dimensions_csv.split(",")
+        else:
+            dimensions = []
+        slicename = ""
+        for dim in dimensions:
+            blank = BNode()
+            self._g.add((dd, component, blank))
+            self._g.add((blank, dimension, URIRef(dim)))
+            self._g.add((blank, order, Literal(index)))
+            if 1 == index:
+                self._g.add((blank, component_attachment, observation))
+            else:
+                self._g.add((blank, component_attachment, qb_slice))
+                slicename += dimensions[index - 1].title()
+                slice_by = self._get_ns("sibis")["sliceBy" + slicename]
+                self._g.add((dd, slice_key, slice_by))
+                for slice_idx in range(1, index):
+                    self._g.add((slice_by, component_property, URIRef(dimensions[slice_idx])))
+            index = index + 1
+
+        # add measures
+        for field in self._fields:
+            if field not in dimensions:
+                blank = BNode()
+                self._g.add((dd, component, blank))
+                self._g.add((blank, measure, URIRef(field)))
+
+        # add attributes
+        attribute = self._get_ns("qb")["attribute"]
+        component_required = self._get_ns("qb")["componentRequired"]
+        measure_property = self._get_ns("qb")["measureProperty"]
+        unit_measure = self._get_ns("sibis")["unitMeasure"]
+        blank = BNode()
+        self._g.add((dd, component, blank))
+        self._g.add((blank, attribute, unit_measure))
+        self._g.add((blank, component_required, Literal("true", datatype=XSD.boolean)))
+        self._g.add((blank, component_attachment, measure_property))
 
     def display_graph(self):
         """Print the RDF file to stdout in turtle format.
@@ -179,6 +239,7 @@ class Transformer(object):
         self._add_prefix("nidm", "http://purl.org/nidash/nidm#")
         self._add_prefix("fs", "http://www.incf.org/ns/nidash/fs#")
         self._add_prefix("qb", "http://purl.org/linked-data/cube#")
+        self._add_prefix("sibis", "http://sibis.sri.com/#")
 
         # add in builtins
         self._add_prefix("owl", OWL)
@@ -220,3 +281,5 @@ class Transformer(object):
     _g = Graph()
     _ns_dict = {}
     _config_dict = {}
+    _datadict = ""
+    _fields = []
