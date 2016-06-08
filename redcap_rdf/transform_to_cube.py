@@ -38,6 +38,13 @@ ISSUED = "issued"
 SUBJECT = "subject"
 METADATA_HEADERS = [DATASET_ID, TITLE, DESCRIPTION, PUBLISHER, ISSUED, SUBJECT]
 
+# Header columns for slices
+SLICE = "slice"
+LABEL = "label"
+LABEL_LANG = "label_lang"
+COMMENT = "comment"
+COMMENT_LANG = "comment_lang"
+
 
 class Transformer(object):
     """Class that transforms a data dictionary into RDF.
@@ -162,6 +169,15 @@ class Transformer(object):
         """
         dd = URIRef(self._datadict)
 
+        # read slices file
+        slices_map = {}
+        if os.path.isfile(slices):
+            with open(slices) as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    slicename = row[SLICE]
+                    slices_map[slicename] = row
+
         # constants
         rdf_type = self._get_ns("rdf")["type"]
         dsd = self._get_ns("qb")["DataStructureDefinition"]
@@ -173,6 +189,8 @@ class Transformer(object):
         order = self._get_ns("qb")["order"]
         measure = self._get_ns("qb")["measure"]
         slice_key = self._get_ns("qb")["sliceKey"]
+        label = self._get_ns("rdfs")["label"]
+        comment = self._get_ns("rdfs")["comment"]
         component_property = self._get_ns("qb")["componentProperty"]
 
         node = (dd, rdf_type, dsd)
@@ -198,6 +216,14 @@ class Transformer(object):
                 slicename += dimensions[index - 1].title()
                 slice_by = self._get_ns("sibis")["sliceBy" + slicename]
                 self._g.add((dd, slice_key, slice_by))
+                if slicename in slices_map:
+                    md = slices_map[slicename]
+                    if len(md[LABEL]) > 0:
+                        label_literal = Literal(md[LABEL], lang=md[LABEL_LANG])
+                        self._g.add((slice_by, label, label_literal))
+                    if len(md[COMMENT]) > 0:
+                        comment_literal = Literal(md[COMMENT], lang=md[COMMENT_LANG])
+                        self._g.add((slice_by, comment, comment_literal))
                 for slice_idx in range(1, index):
                     self._g.add((slice_by, component_property, URIRef(dimensions[slice_idx])))
             index = index + 1
