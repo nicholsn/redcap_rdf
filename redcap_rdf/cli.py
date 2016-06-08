@@ -53,11 +53,15 @@ def validate(datadict, first_lines, verbose):
               help="Comma separated keys that should be treated as dimensions",
               type=str,
               default="")
-def create(datadict, mapping, metadata, dimensions):
+@click.option("--slices",
+              help="File with label and comments for slices",
+              type=str,
+              default="")
+def create(datadict, mapping, metadata, dimensions, slices):
     transformer = Transformer()
     transformer.build_graph(datadict, mapping)
     transformer.add_metadata(metadata)
-    transformer.add_dsd(dimensions)
+    transformer.add_dsd(dimensions, slices)
     transformer.display_graph()
 
 if __name__ == '__main__':

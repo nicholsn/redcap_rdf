@@ -148,11 +148,13 @@ class Transformer(object):
                 self._g.add((term, issued, Literal(md_issued, datatype=XSD.date)))
                 self._g.add((term, subject, URIRef(md_subject)))
 
-    def add_dsd(self, dimensions_csv):
+    def add_dsd(self, dimensions_csv, slices):
         """Adds data structure definition to the RDF graph
 
         Args:
             dimensions_csv (str): CSV string of dimensions
+            slices (str): Path to a csv formatted file with the slices
+                metadata
 
         Returns:
             None
