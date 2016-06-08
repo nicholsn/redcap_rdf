@@ -57,11 +57,15 @@ def validate(datadict, first_lines, verbose):
               help="File with label and comments for slices",
               type=str,
               default="")
-def create(datadict, mapping, metadata, dimensions, slices):
+@click.option("--observations",
+              help="The observations file.",
+              type=str)
+def create(datadict, mapping, metadata, dimensions, slices, observations):
     transformer = Transformer()
     transformer.build_graph(datadict, mapping)
     transformer.add_metadata(metadata)
     transformer.add_dsd(dimensions, slices)
+    transformer.add_observations(observations)
     transformer.display_graph()
 
 if __name__ == '__main__':

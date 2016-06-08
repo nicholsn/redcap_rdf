@@ -246,6 +246,17 @@ class Transformer(object):
         self._g.add((blank, component_required, Literal("true", datatype=XSD.boolean)))
         self._g.add((blank, component_attachment, measure_property))
 
+    def add_observations(self, observations):
+        """Adds a set of observations to the RDF graph
+
+        Args:
+            observations (str): Path to the observations csv file.
+        Returns:
+            None
+
+        """
+        print(observations)
+
     def display_graph(self):
         """Print the RDF file to stdout in turtle format.
 
