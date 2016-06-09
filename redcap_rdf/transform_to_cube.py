@@ -238,7 +238,7 @@ class Transformer(object):
         # add attributes
         attribute = self._get_ns("qb")["attribute"]
         component_required = self._get_ns("qb")["componentRequired"]
-        measure_property = self._get_ns("qb")["measureProperty"]
+        measure_property = self._get_ns("qb")["MeasureProperty"]
         unit_measure = self._get_ns("sibis")["unitMeasure"]
         blank = BNode()
         self._g.add((dd, component, blank))
@@ -267,7 +267,7 @@ class Transformer(object):
         self._add_prefix("nidm", "http://purl.org/nidash/nidm#")
         self._add_prefix("fs", "http://www.incf.org/ns/nidash/fs#")
         self._add_prefix("qb", "http://purl.org/linked-data/cube#")
-        self._add_prefix("sibis", "http://sibis.sri.com/#")
+        self._add_prefix("sibis", "http://sibis.sri.com/terms#")
 
         # add in builtins
         self._add_prefix("owl", OWL)
