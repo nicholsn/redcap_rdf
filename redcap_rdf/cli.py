@@ -40,15 +40,13 @@ def validate(datadict, first_lines, verbose):
 @cli.command()
 @click.option("--datadict",
               help="The data dictionary csv file.",
-              type=str,
-              required=True)
+              type=str)
 @click.option("--mapping",
               help="The mapping file.",
               type=str)
 @click.option("--metadata",
               help="Dataset metadata",
-              type=str,
-              default="")
+              type=str)
 @click.option("--dimensions",
               help="Comma separated keys that should be treated as dimensions",
               type=str,

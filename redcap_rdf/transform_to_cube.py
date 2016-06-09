@@ -12,6 +12,8 @@ import csv
 from rdflib import BNode, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
 
+from redcap_rdf.util import log
+
 # Header columns for data dictionary
 FIELD_NAME = "Variable / Field Name"
 FORM = "Form Name"
@@ -73,10 +75,14 @@ class Transformer(object):
 
         """
         self._build_config_lookup(config)
-        if not os.path.isfile(dd):
-            print("{} file not found".format(dd))
+        if dd is None:
+            log("Data dictionary file not provided")
             return
-        print("Processing: {}".format(dd))
+
+        if not os.path.isfile(dd):
+            log("{} file not found".format(dd))
+            return
+        log("Processing: {}".format(dd))
 
         # constants
         rdf_property = self._get_ns("rdf")["Property"]
@@ -123,10 +129,14 @@ class Transformer(object):
             None
 
         """
-        if not os.path.isfile(metadata_path):
-            print("{} file not found".format(metadata_path))
+        if metadata_path is None:
+            log("Metadata file is not provided")
             return
-        print("Metadata processing: {}".format(metadata_path))
+
+        if not os.path.isfile(metadata_path):
+            log("{} file not found".format(metadata_path))
+            return
+        log("Metadata processing: {}".format(metadata_path))
 
         # constants
         dataset = self._get_ns("qb")["DataSet"]
@@ -207,7 +217,7 @@ class Transformer(object):
         for dim in dimensions:
             blank = BNode()
             self._g.add((dd, component, blank))
-            self._g.add((blank, dimension, URIRef(dim)))
+            self._g.add((blank, dimension, self._get_ns("sibis")[dim]))
             self._g.add((blank, order, Literal(index)))
             if 1 == index:
                 self._g.add((blank, component_attachment, observation))
@@ -225,7 +235,8 @@ class Transformer(object):
                         comment_literal = Literal(md[COMMENT], lang=md[COMMENT_LANG])
                         self._g.add((slice_by, comment, comment_literal))
                 for slice_idx in range(1, index):
-                    self._g.add((slice_by, component_property, URIRef(dimensions[slice_idx])))
+                    dim = self._get_ns("sibis")[dimensions[slice_idx]]
+                    self._g.add((slice_by, component_property, dim))
             index = index + 1
 
         # add measures
@@ -233,12 +244,12 @@ class Transformer(object):
             if field not in dimensions:
                 blank = BNode()
                 self._g.add((dd, component, blank))
-                self._g.add((blank, measure, URIRef(field)))
+                self._g.add((blank, measure, self._get_ns("sibis")[field]))
 
         # add attributes
         attribute = self._get_ns("qb")["attribute"]
         component_required = self._get_ns("qb")["componentRequired"]
-        measure_property = self._get_ns("qb")["measureProperty"]
+        measure_property = self._get_ns("qb")["MeasureProperty"]
         unit_measure = self._get_ns("sibis")["unitMeasure"]
         blank = BNode()
         self._g.add((dd, component, blank))
@@ -299,7 +310,7 @@ class Transformer(object):
         self._add_prefix("nidm", "http://purl.org/nidash/nidm#")
         self._add_prefix("fs", "http://www.incf.org/ns/nidash/fs#")
         self._add_prefix("qb", "http://purl.org/linked-data/cube#")
-        self._add_prefix("sibis", "http://sibis.sri.com/#")
+        self._add_prefix("sibis", "http://sibis.sri.com/terms#")
 
         # add in builtins
         self._add_prefix("owl", OWL)
@@ -326,8 +337,12 @@ class Transformer(object):
         return self._get_ns(ns)[resource]
 
     def _build_config_lookup(self, config):
+        if config is None:
+            log("Mapping file not provided")
+            return
+
         if not os.path.isfile(config):
-            print("{} file not found".format(config))
+            log("{} file not found".format(config))
             return
 
         with open(config) as f:
