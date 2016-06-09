@@ -12,6 +12,8 @@ import csv
 from rdflib import BNode, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
 
+from redcap_rdf.util import log
+
 # Header columns for data dictionary
 FIELD_NAME = "Variable / Field Name"
 FORM = "Form Name"
@@ -74,9 +76,9 @@ class Transformer(object):
         """
         self._build_config_lookup(config)
         if not os.path.isfile(dd):
-            print("{} file not found".format(dd))
+            log("{} file not found".format(dd))
             return
-        print("Processing: {}".format(dd))
+        log("Processing: {}".format(dd))
 
         # constants
         rdf_property = self._get_ns("rdf")["Property"]
@@ -124,9 +126,9 @@ class Transformer(object):
 
         """
         if not os.path.isfile(metadata_path):
-            print("{} file not found".format(metadata_path))
+            log("{} file not found".format(metadata_path))
             return
-        print("Metadata processing: {}".format(metadata_path))
+        log("Metadata processing: {}".format(metadata_path))
 
         # constants
         dataset = self._get_ns("qb")["DataSet"]
@@ -296,7 +298,7 @@ class Transformer(object):
 
     def _build_config_lookup(self, config):
         if not os.path.isfile(config):
-            print("{} file not found".format(config))
+            log("{} file not found".format(config))
             return
 
         with open(config) as f:
