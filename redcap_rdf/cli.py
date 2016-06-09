@@ -45,9 +45,27 @@ def validate(datadict, first_lines, verbose):
 @click.option("--mapping",
               help="The mapping file.",
               type=str)
-def create(datadict, mapping):
+@click.option("--metadata",
+              help="Dataset metadata",
+              type=str,
+              default="")
+@click.option("--dimensions",
+              help="Comma separated keys that should be treated as dimensions",
+              type=str,
+              default="")
+@click.option("--slices",
+              help="File with label and comments for slices",
+              type=str,
+              default="")
+@click.option("--observations",
+              help="The observations file.",
+              type=str)
+def create(datadict, mapping, metadata, dimensions, slices, observations):
     transformer = Transformer()
     transformer.build_graph(datadict, mapping)
+    transformer.add_metadata(metadata)
+    transformer.add_dsd(dimensions, slices)
+    transformer.add_observations(observations)
     transformer.display_graph()
 
 if __name__ == '__main__':
