@@ -207,7 +207,7 @@ class Transformer(object):
         for dim in dimensions:
             blank = BNode()
             self._g.add((dd, component, blank))
-            self._g.add((blank, dimension, URIRef(dim)))
+            self._g.add((blank, dimension, self._get_ns("sibis")[dim]))
             self._g.add((blank, order, Literal(index)))
             if 1 == index:
                 self._g.add((blank, component_attachment, observation))
@@ -225,7 +225,8 @@ class Transformer(object):
                         comment_literal = Literal(md[COMMENT], lang=md[COMMENT_LANG])
                         self._g.add((slice_by, comment, comment_literal))
                 for slice_idx in range(1, index):
-                    self._g.add((slice_by, component_property, URIRef(dimensions[slice_idx])))
+                    dim = self._get_ns("sibis")[dimensions[slice_idx]]
+                    self._g.add((slice_by, component_property, dim))
             index = index + 1
 
         # add measures
@@ -233,7 +234,7 @@ class Transformer(object):
             if field not in dimensions:
                 blank = BNode()
                 self._g.add((dd, component, blank))
-                self._g.add((blank, measure, URIRef(field)))
+                self._g.add((blank, measure, self._get_ns("sibis")[field]))
 
         # add attributes
         attribute = self._get_ns("qb")["attribute"]
