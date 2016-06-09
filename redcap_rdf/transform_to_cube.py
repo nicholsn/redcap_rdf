@@ -255,7 +255,28 @@ class Transformer(object):
             None
 
         """
-        print(observations)
+        if not os.path.isfile(observations):
+            print("{} file not found".format(observations))
+            return
+        print("Processing: {}".format(observations))
+
+        # constants
+        dd = URIRef(self._datadict)
+        rdf_type = self._get_ns("rdf")["type"]
+        observation = self._get_ns("qb")["Observation"]
+        dataset = self._get_ns("qb")["dataSet"]
+
+        with open(observations) as f:
+            reader = csv.DictReader(f)
+            index = 0
+            for row in reader:
+                obs = Literal("obs{}".format(index))
+                self._g.add((obs, rdf_type, observation))
+                self._g.add((obs, dataset, dd))
+                for key, vals in self._config_dict.iteritems():
+                    concept = URIRef(vals[CONCEPT])
+                    self._g.add((obs, concept, Literal(row[key])))
+                index = index + 1
 
     def display_graph(self):
         """Print the RDF file to stdout in turtle format.
