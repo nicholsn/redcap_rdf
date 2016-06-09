@@ -75,6 +75,10 @@ class Transformer(object):
 
         """
         self._build_config_lookup(config)
+        if dd is None:
+            log("Data dictionary file not provided")
+            return
+
         if not os.path.isfile(dd):
             log("{} file not found".format(dd))
             return
@@ -125,6 +129,10 @@ class Transformer(object):
             None
 
         """
+        if metadata_path is None:
+            log("Metadata file is not provided")
+            return
+
         if not os.path.isfile(metadata_path):
             log("{} file not found".format(metadata_path))
             return
@@ -297,6 +305,10 @@ class Transformer(object):
         return self._get_ns(ns)[resource]
 
     def _build_config_lookup(self, config):
+        if config is None:
+            log("Mapping file not provided")
+            return
+
         if not os.path.isfile(config):
             log("{} file not found".format(config))
             return
