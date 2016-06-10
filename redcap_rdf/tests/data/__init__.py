@@ -6,7 +6,9 @@ import os
 
 test_files = dict()
 
-for filename in os.listdir(os.path.dirname(__file__)):
+_test_data_dir = os.path.dirname(__file__)
+for filename in os.listdir(_test_data_dir):
     if filename not in ['__init__.py', '__init__.pyc']:
         key, _ = os.path.splitext(filename)
-        test_files.update({key: os.path.abspath(filename)})
+        absfilename = os.path.join(_test_data_dir, filename)
+        test_files.update({key: os.path.abspath(absfilename)})

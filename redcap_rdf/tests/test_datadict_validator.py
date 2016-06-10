@@ -2,15 +2,12 @@
 ##  See COPYING file distributed along with the redcap_rdf package for the
 ##  copyright and license terms
 ##
-import os
-
 import pytest
 
+from redcap_rdf.tests.data import test_files
 from redcap_rdf.datadict_validator import Validator
 
-datadict = os.path.join(os.path.dirname(__file__),
-                        'data',
-                        'datadict_test_cases.csv')
+datadict = test_files.get('datadict_test_cases')
 
 
 def test_file_exists():
@@ -22,9 +19,7 @@ def test_file_exists():
 
 def test_check_headers():
     validator = Validator()
-    corrupt_header = os.path.join(os.path.dirname(__file__),
-                                  'data',
-                                  'datadict_corrupt_header.csv')
+    corrupt_header = test_files.get('datadict_corrupt_header')
     validator.process(corrupt_header, [])
     code = "HEADERS"
     assert code in validator.errors.keys()
