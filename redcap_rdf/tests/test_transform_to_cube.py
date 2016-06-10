@@ -22,3 +22,9 @@ def test_build_graph():
     assert '<http://ncanda.sri.com/terms.ttl#subject>' in subjects
 
 
+def test_add_metadata():
+    metadata_path = test_files.get('dataset')
+    transformer = Transformer()
+    transformer.add_metadata(metadata_path)
+    subjects = [i.n3() for i in transformer._g.subjects()]
+    assert "<http://sibis.sri.com/iri/ncanda-public-release-1.0.0>" in subjects

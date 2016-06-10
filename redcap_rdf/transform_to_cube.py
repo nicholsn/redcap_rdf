@@ -162,7 +162,8 @@ class Transformer(object):
                 self._g.add((term, title, Literal(md_title)))
                 self._g.add((term, description, Literal(md_description)))
                 self._g.add((term, publisher, Literal(md_publisher)))
-                self._g.add((term, issued, Literal(md_issued, datatype=XSD.date)))
+                self._g.add((term, issued, Literal(md_issued,
+                                                   datatype=XSD.date)))
                 self._g.add((term, subject, URIRef(md_subject)))
 
     def add_dsd(self, dimensions_csv, slices):
@@ -232,7 +233,8 @@ class Transformer(object):
                         label_literal = Literal(md[LABEL], lang=md[LABEL_LANG])
                         self._g.add((slice_by, label, label_literal))
                     if len(md[COMMENT]) > 0:
-                        comment_literal = Literal(md[COMMENT], lang=md[COMMENT_LANG])
+                        comment_literal = Literal(md[COMMENT],
+                                                  lang=md[COMMENT_LANG])
                         self._g.add((slice_by, comment, comment_literal))
                 for slice_idx in range(1, index):
                     dim = self._get_ns("sibis")[dimensions[slice_idx]]
@@ -254,7 +256,8 @@ class Transformer(object):
         blank = BNode()
         self._g.add((dd, component, blank))
         self._g.add((blank, attribute, unit_measure))
-        self._g.add((blank, component_required, Literal("true", datatype=XSD.boolean)))
+        self._g.add((blank, component_required, Literal("true",
+                                                        datatype=XSD.boolean)))
         self._g.add((blank, component_attachment, measure_property))
 
     def add_observations(self, observations):
