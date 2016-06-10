@@ -8,6 +8,7 @@
 """
 import os
 import csv
+import uuid
 
 from rdflib import BNode, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
@@ -61,6 +62,8 @@ class Transformer(object):
         self._ns_dict = {}
         self._config_dict = {}
         self._add_prefixes()
+        self._datadict = ""
+        self._fields = []
 
     def build_graph(self, dd, config):
         """Constructs a graph from the data dictionary using a config file.
@@ -178,7 +181,10 @@ class Transformer(object):
             None
 
         """
-        dd = URIRef(self._datadict)
+        if self._datadict:
+            dd = self._get_ns('sibis')[self._datadict]
+        else:
+            dd = URIRef(self._datadict)
 
         # read slices file
         slices_map = {}
@@ -239,7 +245,7 @@ class Transformer(object):
                 for slice_idx in range(1, index):
                     dim = self._get_ns("sibis")[dimensions[slice_idx]]
                     self._g.add((slice_by, component_property, dim))
-            index = index + 1
+            index += 1
 
         # add measures
         for field in self._fields:
@@ -314,6 +320,7 @@ class Transformer(object):
         self._add_prefix("fs", "http://www.incf.org/ns/nidash/fs#")
         self._add_prefix("qb", "http://purl.org/linked-data/cube#")
         self._add_prefix("sibis", "http://sibis.sri.com/terms#")
+        self._add_prefix("iri", "http://sibis.sri.com/iri/")
 
         # add in builtins
         self._add_prefix("owl", OWL)
@@ -354,10 +361,3 @@ class Transformer(object):
                 # drop empty values
                 res = dict((k, v) for k, v in row.iteritems() if v is not "")
                 self._config_dict[row[FIELD_NAME]] = res
-
-    # 'private' member data
-    _g = Graph()
-    _ns_dict = {}
-    _config_dict = {}
-    _datadict = ""
-    _fields = []

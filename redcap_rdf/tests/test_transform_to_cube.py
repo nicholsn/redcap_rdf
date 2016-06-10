@@ -28,3 +28,12 @@ def test_add_metadata():
     transformer.add_metadata(metadata_path)
     subjects = [i.n3() for i in transformer._g.subjects()]
     assert "<http://sibis.sri.com/iri/ncanda-public-release-1.0.0>" in subjects
+
+
+def test_add_dsd():
+    dimensions_csv = 'subject,arm,visit'
+    slices = test_files.get('slices')
+    transformer = Transformer()
+    transformer.add_dsd(dimensions_csv, slices)
+    subjects = [i.n3() for i in transformer._g.subjects()]
+    assert "<http://sibis.sri.com/terms#sliceByArmVisit>" in subjects
