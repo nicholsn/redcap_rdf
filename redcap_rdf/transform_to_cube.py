@@ -8,7 +8,7 @@
 """
 import os
 import csv
-import uuid
+import hashlib
 
 from rdflib import BNode, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
@@ -281,7 +281,10 @@ class Transformer(object):
         print("Processing: {}".format(observations))
 
         # constants
-        dd = URIRef(self._datadict)
+        if self._datadict:
+            dd = self._get_ns('sibis')[self._datadict]
+        else:
+            dd = URIRef(self._datadict)
         rdf_type = self._get_ns("rdf")["type"]
         observation = self._get_ns("qb")["Observation"]
         dataset = self._get_ns("qb")["dataSet"]
@@ -290,13 +293,14 @@ class Transformer(object):
             reader = csv.DictReader(f)
             index = 0
             for row in reader:
-                obs = Literal("obs{}".format(index))
+                sha1 = hashlib.sha1(str(row)).hexdigest()
+                obs = self._get_ns('iri')[sha1]
                 self._g.add((obs, rdf_type, observation))
                 self._g.add((obs, dataset, dd))
                 for key, vals in self._config_dict.iteritems():
                     concept = URIRef(vals[CONCEPT])
                     self._g.add((obs, concept, Literal(row[key])))
-                index = index + 1
+                index += 1
 
     def display_graph(self):
         """Print the RDF file to stdout in turtle format.
@@ -305,7 +309,7 @@ class Transformer(object):
             None
 
         """
-        print(self._g.serialize(format='n3'))
+        print(self._g.serialize(format='turtle'))
 
     def _add_prefix(self, prefix, namespace):
         ns = Namespace(namespace)

@@ -37,3 +37,12 @@ def test_add_dsd():
     transformer.add_dsd(dimensions_csv, slices)
     subjects = [i.n3() for i in transformer._g.subjects()]
     assert "<http://sibis.sri.com/terms#sliceByArmVisit>" in subjects
+
+
+def test_add_observations():
+    observation = test_files.get('observation')
+    transformer = Transformer()
+    transformer.add_observations(observation)
+    subjects = [i.n3() for i in transformer._g.subjects()]
+    iri = "<http://sibis.sri.com/iri/0251ee3ec64386df9864ff27219610488c61792a>"
+    assert iri in subjects
