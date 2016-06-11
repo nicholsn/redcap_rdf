@@ -65,19 +65,19 @@ class Transformer(object):
         self._datadict = ""
         self._fields = []
 
-    def build_graph(self, dd, config):
+    def build_graph(self, dd, mapping):
         """Constructs a graph from the data dictionary using a config file.
 
         Args:
             dd (str): Path to the data dictionary csv file.
-            config (str): Path to a csv formatted config with supplementary
+            mapping (str): Path to a csv formatted config with supplementary
                 information file.
 
         Returns:
             None
 
         """
-        self._build_config_lookup(config)
+        self._build_config_lookup(mapping)
         if dd is None:
             log("Data dictionary file not provided")
             return
