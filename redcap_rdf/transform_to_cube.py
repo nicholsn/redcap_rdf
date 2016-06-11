@@ -113,6 +113,7 @@ class Transformer(object):
         log("Processing: {}".format(dd))
 
         # constants
+        rdf_type = self._get_ns("rdf")["type"]
         rdf_property = self._get_ns("rdf")["Property"]
         dimension_property = self._get_ns("qb")["DimensionProperty"]
         measure_property = self._get_ns("qb")["MeasureProperty"]
@@ -126,17 +127,23 @@ class Transformer(object):
             reader = csv.DictReader(f)
             for row in reader:
                 field_name = row[FIELD_NAME]
+                field_label = row[FIELD_LABEL]
                 self._fields.append(field_name)
-                # TODO: Use Field Label if available else field_name.split('_')
-                # and capitalize and join with a space.
                 node = self._get_ns("ncanda")[field_name]
-                self._g.add((node, rdfs_label, Literal(field_name)))
+                # Use field_name to create "Field Name" label.
+                if field_label:
+                    label = field_label
+                else:
+                    split = [i.capitalize() for i in field_label.split('_')]
+                    label = ' '.join(split)
+                self._g.add((node, rdfs_label, Literal(label)))
                 prop = measure_property
                 if (field_name in self._config_dict and
                         DIMENSION in self._config_dict[field_name]):
                     if self._config_dict[field_name][DIMENSION] == "y":
                         prop = dimension_property
-                self._g.add((node, rdf_property, prop))
+                self._g.add((node, rdf_type, prop))
+                self._g.add((node, rdf_type, rdf_property))
                 if (field_name in self._config_dict and
                         CONCEPT in self._config_dict[field_name]):
                     obj = URIRef(self._config_dict[field_name][CONCEPT])
@@ -248,7 +255,7 @@ class Transformer(object):
         # Add dimension.
         index = 1
         # Check that dimensions were passed.
-        if 0 < len(dimensions_csv):
+        if dimensions_csv:
             dimensions = dimensions_csv.split(",")
         else:
             dimensions = []
@@ -279,14 +286,15 @@ class Transformer(object):
                     self._g.add((slice_by, component_property, dim))
             index += 1
 
-        # add measures
+        # Add measures.
         for field in self._fields:
             if field not in dimensions:
                 blank = BNode()
+                measure_field = self._get_ns("ncanda")[field]
                 self._g.add((dd, component, blank))
-                self._g.add((blank, measure, self._get_ns("sibis")[field]))
+                self._g.add((blank, measure, measure_field))
 
-        # add attributes
+        # Add attributes.
         attribute = self._get_ns("qb")["attribute"]
         component_required = self._get_ns("qb")["componentRequired"]
         measure_property = self._get_ns("qb")["MeasureProperty"]

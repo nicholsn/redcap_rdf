@@ -1,6 +1,14 @@
 # https://dvcs.w3.org/hg/gld/raw-file/default/data-cube/index.html#ic-3
 
+# Note that the commented-out query below is from the spec and doesn't apear to
+# be correct. An updated query is provided.
+#
+#ASK {
+#  ?dsd a qb:DataStructureDefinition .
+#  FILTER NOT EXISTS { ?dsd qb:component [qb:componentProperty [a qb:MeasureProperty]] }
+#}
+
 ASK {
   ?dsd a qb:DataStructureDefinition .
-  FILTER NOT EXISTS { ?dsd qb:component [qb:componentProperty [a qb:MeasureProperty]] }
+  FILTER NOT EXISTS { ?dsd qb:component [qb:measure [a qb:MeasureProperty]] }
 }

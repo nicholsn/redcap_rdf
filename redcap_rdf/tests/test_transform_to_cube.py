@@ -67,3 +67,8 @@ def test_ic1():
 def test_ic2():
     result = ic_transformer.query(queries.get("ic-2_unique_dsd"))
     assert result.askAnswer is False
+
+
+def test_ic3():
+    result = ic_transformer.query(queries.get("ic-3_dsd_includes_measure"))
+    assert result.askAnswer is False
