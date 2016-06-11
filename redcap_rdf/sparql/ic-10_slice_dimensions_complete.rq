@@ -1,0 +1,6 @@
+# https://dvcs.w3.org/hg/gld/raw-file/default/data-cube/index.html#ic-10
+
+ASK {
+  ?slice qb:sliceStructure [qb:componentProperty ?dim] .
+  FILTER NOT EXISTS { ?slice ?dim [] }
+}

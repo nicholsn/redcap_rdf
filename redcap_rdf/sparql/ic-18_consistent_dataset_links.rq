@@ -1,0 +1,7 @@
+# https://dvcs.w3.org/hg/gld/raw-file/default/data-cube/index.html#ic-18
+
+ASK {
+    ?dataset qb:slice       ?slice .
+    ?slice   qb:observation ?obs .
+    FILTER NOT EXISTS { ?obs qb:dataSet ?dataset . }
+}

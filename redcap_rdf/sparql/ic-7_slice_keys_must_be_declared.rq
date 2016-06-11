@@ -1,0 +1,6 @@
+# https://dvcs.w3.org/hg/gld/raw-file/default/data-cube/index.html#ic-7
+
+ASK {
+    ?sliceKey a qb:SliceKey .
+    FILTER NOT EXISTS { [a qb:DataStructureDefinition] qb:sliceKey ?sliceKey }
+}
