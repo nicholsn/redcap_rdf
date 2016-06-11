@@ -65,6 +65,31 @@ class Transformer(object):
         self._datadict = ""
         self._fields = []
 
+    def query(self, query_object, processor='sparql', result='sparql',
+              init_ns=None, init_bindings=None, use_store_provided=True,
+              **kwargs):
+        """
+        Query this graph.
+
+        Args:
+            query_object (str): A SPARQL query.
+            processor (str): Query processor to use.
+            result (str): Result processor to use.
+            init_ns (dict): A type of 'prepared queries' can be realised by
+                providing initial variable bindings with init_bindings.
+            init_bindings (dict): Initial namespaces are used to resolve
+                prefixes used in the query, if none are given, the namespaces
+                from the graph's namespace manager are used.
+            use_store_provided (bool): Use the provided sparql store.
+            **kwargs:
+
+        Returns:
+            An rdflib.query.QueryResult object.
+
+        """
+        return self._g.query(query_object, processor, result, init_ns,
+                             init_bindings, use_store_provided, **kwargs)
+
     def build_graph(self, dd, mapping):
         """Constructs a graph from the data dictionary using a config file.
 
