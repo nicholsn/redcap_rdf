@@ -55,9 +55,8 @@ def test_add_observations():
 def test_ic1():
     transformer = Transformer()
     transformer.build_graph(dd, mapping)
-    transformer.add_dsd(dimensions_csv)
+    transformer.add_dsd(dimensions_csv, slices)
     transformer.add_metadata(metadata_path)
     transformer.add_observations(observation)
-    result = transformer.
-
-
+    result = transformer.query(queries.get("ic-1_unique_dataset"))
+    assert result.askAnswer is False

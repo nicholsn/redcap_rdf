@@ -11,4 +11,6 @@ for filename in os.listdir(query_dir):
     if filename not in ['__init__.py', '__init__.pyc']:
         key, _ = os.path.splitext(filename)
         absfilename = os.path.join(query_dir, filename)
-        queries.update({key: os.path.abspath(absfilename)})
+        with open(os.path.abspath(absfilename), 'r') as fi:
+            query = fi.read()
+        queries.update({key: query})
