@@ -303,7 +303,7 @@ class Transformer(object):
         if not os.path.isfile(observations):
             print("{} file not found".format(observations))
             return
-        print("Processing: {}".format(observations))
+        log("Processing: {}".format(observations))
 
         # constants
         if self._datadict:
