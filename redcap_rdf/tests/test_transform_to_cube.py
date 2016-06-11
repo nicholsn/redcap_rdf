@@ -17,6 +17,13 @@ dimensions_csv = 'subject,arm,visit'
 observation = test_files.get('observation')
 mapping = test_files.get('mapping')
 
+# Setup for integrity constraint checks
+ic_transformer = Transformer()
+ic_transformer.build_graph(dd, mapping)
+ic_transformer.add_metadata(metadata_path)
+ic_transformer.add_dsd(dimensions_csv, slices)
+ic_transformer.add_observations(observation)
+
 
 def test_init():
     transformer = Transformer()
@@ -53,10 +60,10 @@ def test_add_observations():
 
 
 def test_ic1():
-    transformer = Transformer()
-    transformer.build_graph(dd, mapping)
-    transformer.add_dsd(dimensions_csv, slices)
-    transformer.add_metadata(metadata_path)
-    transformer.add_observations(observation)
-    result = transformer.query(queries.get("ic-1_unique_dataset"))
+    result = ic_transformer.query(queries.get("ic-1_unique_dataset"))
+    assert result.askAnswer is False
+
+
+def test_ic2():
+    result = ic_transformer.query(queries.get("ic-2_unique_dsd"))
     assert result.askAnswer is False

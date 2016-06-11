@@ -222,7 +222,9 @@ class Transformer(object):
 
         # constants
         rdf_type = self._get_ns("rdf")["type"]
+        dataset = self._get_ns("qb")["DataSet"]
         dsd = self._get_ns("qb")["DataStructureDefinition"]
+        structure = self._get_ns("qb")["structure"]
         observation = self._get_ns("qb")["Observation"]
         qb_slice = self._get_ns("qb")["Slice"]
         component = self._get_ns("qb")["component"]
@@ -238,9 +240,14 @@ class Transformer(object):
         node = (dd, rdf_type, dsd)
         self._g.add(node)
 
-        # add dimension
+        # Link to dataset.
+        dataset_uri = list(self._g.subjects(rdf_type, dataset))
+        if dataset_uri:
+            self._g.add((dataset_uri[0], structure, dd))
+
+        # Add dimension.
         index = 1
-        # check that dimensions were passed
+        # Check that dimensions were passed.
         if 0 < len(dimensions_csv):
             dimensions = dimensions_csv.split(",")
         else:
