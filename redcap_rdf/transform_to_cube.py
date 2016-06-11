@@ -31,6 +31,7 @@ CONCEPT = "concept"
 CATEGORIES = "categories"
 STATISTIC = "statistic"
 UNITS = "units"
+RANGE = "range"
 
 # Header columns for metadata
 DATASET_ID = "dataset_id"
@@ -121,6 +122,8 @@ class Transformer(object):
         rdfs_label = self._get_ns("rdfs")["label"]
         rdfs_subPropertyOf = self._get_ns("rdfs")["subPropertyOf"]
         rdfs_range = self._get_ns("rdfs")["range"]
+        unit_measure = self._get_ns("sibis")["unitMeasure"]
+        statistic = self._get_ns("sibis")["statistic"]
 
         self._datadict = os.path.basename(dd)
         with open(dd) as f:
@@ -130,6 +133,8 @@ class Transformer(object):
                 field_label = row[FIELD_LABEL]
                 self._fields.append(field_name)
                 node = self._get_ns("ncanda")[field_name]
+                # Default to MeasureProperty.
+                prop = measure_property
                 # Use field_name to create "Field Name" label.
                 if field_label:
                     label = field_label
@@ -137,21 +142,34 @@ class Transformer(object):
                     split = [i.capitalize() for i in field_label.split('_')]
                     label = ' '.join(split)
                 self._g.add((node, rdfs_label, Literal(label)))
-                prop = measure_property
+                # Set prop for dimension properties.
                 if (field_name in self._config_dict and
                         DIMENSION in self._config_dict[field_name]):
                     if self._config_dict[field_name][DIMENSION] == "y":
                         prop = dimension_property
                 self._g.add((node, rdf_type, prop))
                 self._g.add((node, rdf_type, rdf_property))
+                # Annotate with Concepts.
                 if (field_name in self._config_dict and
                         CONCEPT in self._config_dict[field_name]):
                     obj = URIRef(self._config_dict[field_name][CONCEPT])
                     self._g.add((node, concept, obj))
+                # Annotate with Range.
+                if (field_name in self._config_dict and
+                        RANGE in self._config_dict[field_name]):
+                    obj = URIRef(self._config_dict[field_name][RANGE])
+                    self._g.add((node, rdfs_range, obj))
+                # Annotate with Units.
                 if (field_name in self._config_dict and
                         UNITS in self._config_dict[field_name]):
-                    obj = self._get_term(self._config_dict[field_name][UNITS])
-                    self._g.add((node, rdfs_range, obj))
+                    obj = URIRef(self._config_dict[field_name][UNITS])
+                    self._g.add((node, unit_measure, obj))
+                # Annotate with Statistic.
+                if (field_name in self._config_dict and
+                        STATISTIC in self._config_dict[field_name]):
+                    obj = URIRef(self._config_dict[field_name][STATISTIC])
+                    self._g.add((node, statistic, obj))
+                # Todo: Create qb:codeList for dimension and categorical data
 
     def add_metadata(self, metadata_path):
         """Adds the dataset metadata to the graph
@@ -338,8 +356,8 @@ class Transformer(object):
                 self._g.add((obs, rdf_type, observation))
                 self._g.add((obs, dataset, dd))
                 for key, vals in self._config_dict.iteritems():
-                    concept = URIRef(vals[CONCEPT])
-                    self._g.add((obs, concept, Literal(row[key])))
+                    field_name = self._get_ns("ncanda")[vals[FIELD_NAME]]
+                    self._g.add((obs, field_name, Literal(row[key])))
                 index += 1
 
     def display_graph(self):
@@ -365,6 +383,7 @@ class Transformer(object):
         self._add_prefix("qb", "http://purl.org/linked-data/cube#")
         self._add_prefix("sibis", "http://sibis.sri.com/terms#")
         self._add_prefix("iri", "http://sibis.sri.com/iri/")
+        self._add_prefix("obo", "http://purl.obolibrary.org/obo/")
 
         # add in builtins
         self._add_prefix("owl", OWL)
@@ -383,12 +402,6 @@ class Transformer(object):
         if prefix in self._ns_dict:
             return self._ns_dict[prefix]
         return None
-
-    def _get_term(self, term):
-        parts = term.split(":")
-        ns = parts[0]
-        resource = parts[1]
-        return self._get_ns(ns)[resource]
 
     def _build_config_lookup(self, config):
         if config is None:

@@ -72,3 +72,8 @@ def test_ic2():
 def test_ic3():
     result = ic_transformer.query(queries.get("ic-3_dsd_includes_measure"))
     assert result.askAnswer is False
+
+
+def test_ic4():
+    result = ic_transformer.query(queries.get("ic-4_dimensions_have_range"))
+    assert result.askAnswer is False
