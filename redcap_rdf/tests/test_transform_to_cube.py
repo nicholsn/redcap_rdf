@@ -99,3 +99,9 @@ def test_ic7():
     ic = "ic-7_slice_keys_must_be_declared"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic8():
+    ic = "ic-8_slice_keys_consistent_with_dsd"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
