@@ -346,23 +346,37 @@ class Transformer(object):
         else:
             dd = URIRef(self._datadict)
         rdf_type = self._get_ns("rdf")["type"]
-        observation = self._get_ns("qb")["Observation"]
+        observation_type = self._get_ns("qb")["Observation"]
+        observation = self._get_ns("qb")["observation"]
+        slice = self._get_ns("qb")["Slice"]
+        slice_structure = self._get_ns("qb")["sliceStructure"]
         dataset = self._get_ns("qb")["dataSet"]
 
         with open(observations) as f:
             reader = csv.DictReader(f)
             index = 0
             for row in reader:
-                sha1 = hashlib.sha1(str(row)).hexdigest()
-                obs = self._get_ns('iri')[sha1]
-                self._g.add((obs, rdf_type, observation))
+                obs_sha1 = hashlib.sha1(str(row)).hexdigest()
+                obs = self._get_ns('iri')[obs_sha1]
+                slice_vals = [row.get(i) for i in self._dimensions[1:]]
+                slice_sha1 = hashlib.sha1(str(slice_vals)).hexdigest()
+                slice_iri = self._get_ns('iri')[slice_sha1]
+                self._g.add((obs, rdf_type, observation_type))
                 self._g.add((obs, dataset, dd))
+                self._g.add((slice_iri, rdf_type, slice))
+                self._g.add((slice_iri, slice_structure, dd))
                 for key, vals in self._config_dict.iteritems():
                     field_name = vals[FIELD_NAME]
+                    field_name_iri = self._get_ns("ncanda")[field_name]
                     # Only include the first dimension at the observation level.
                     if field_name not in self._dimensions[1:]:
-                        field_name_iri = self._get_ns("ncanda")[field_name]
                         self._g.add((obs, field_name_iri, Literal(row[key])))
+                        self._g.add((slice_iri, observation, obs))
+                    else:
+                        # Add slice indices.
+                        self._g.add((slice_iri,
+                                     field_name_iri,
+                                     Literal(row[key])))
                 index += 1
 
     def display_graph(self):
