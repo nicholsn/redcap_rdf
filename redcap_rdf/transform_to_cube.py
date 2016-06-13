@@ -289,8 +289,9 @@ class Transformer(object):
                 self._g.add((blank, component_attachment, qb_slice))
                 slicename += self._dimensions[index - 1].title()
                 slice_by = self._get_ns("sibis")["sliceBy" + slicename]
-                self._g.add((dd, slice_key, slice_by))
+                # Only add slices defined in csv inputs
                 if slicename in slices_map:
+                    self._g.add((dd, slice_key, slice_by))
                     md = slices_map[slicename]
                     if len(md[LABEL]) > 0:
                         label_literal = Literal(md[LABEL], lang=md[LABEL_LANG])
@@ -299,10 +300,10 @@ class Transformer(object):
                         comment_literal = Literal(md[COMMENT],
                                                   lang=md[COMMENT_LANG])
                         self._g.add((slice_by, comment, comment_literal))
-                for slice_idx in range(1, index):
-                    dim = self._get_ns("sibis")[self._dimensions[slice_idx]]
-                    self._g.add((slice_by, component_property, dim))
-                    self._g.add((slice_by, rdf_type, slice_key_type))
+                    for slice_idx in range(1, index):
+                        dim = self._get_ns("sibis")[self._dimensions[slice_idx]]
+                        self._g.add((slice_by, component_property, dim))
+                        self._g.add((slice_by, rdf_type, slice_key_type))
             index += 1
 
         # Add measures.
