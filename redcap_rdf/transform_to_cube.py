@@ -258,6 +258,7 @@ class Transformer(object):
         order = self._get_ns("qb")["order"]
         measure = self._get_ns("qb")["measure"]
         slice_key = self._get_ns("qb")["sliceKey"]
+        slice_key_type = self._get_ns("qb")["SliceKey"]
         label = self._get_ns("rdfs")["label"]
         comment = self._get_ns("rdfs")["comment"]
         component_property = self._get_ns("qb")["componentProperty"]
@@ -302,6 +303,7 @@ class Transformer(object):
                 for slice_idx in range(1, index):
                     dim = self._get_ns("sibis")[dimensions[slice_idx]]
                     self._g.add((slice_by, component_property, dim))
+                    self._g.add((slice_by, rdf_type, slice_key_type))
             index += 1
 
         # Add measures.

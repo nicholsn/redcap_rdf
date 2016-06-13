@@ -1,6 +1,16 @@
 # https://dvcs.w3.org/hg/gld/raw-file/default/data-cube/index.html#ic-7
+#
+# Note that rdflib didn't like the blank node representation of the query.
+#
+#ASK {
+#    ?sliceKey a qb:SliceKey .
+#    FILTER NOT EXISTS { [a qb:DataStructureDefinition] qb:sliceKey ?sliceKey }
+#}
 
 ASK {
     ?sliceKey a qb:SliceKey .
-    FILTER NOT EXISTS { [a qb:DataStructureDefinition] qb:sliceKey ?sliceKey }
+    FILTER NOT EXISTS {
+        ?dsd a qb:DataStructureDefinition ;
+            qb:sliceKey ?sliceKey .
+    }
 }

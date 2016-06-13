@@ -93,3 +93,9 @@ def test_ic6():
     ic = "ic-6_only_attributes_may_be_optional"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic7():
+    ic = "ic-7_slice_keys_must_be_declared"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
