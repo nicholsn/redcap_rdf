@@ -65,6 +65,7 @@ class Transformer(object):
         self._add_prefixes()
         self._datadict = ""
         self._fields = []
+        self._dimensions = []
 
     def query(self, query_object, processor='sparql', result='sparql',
               init_ns=None, init_bindings=None, use_store_provided=True,
@@ -275,11 +276,9 @@ class Transformer(object):
         index = 1
         # Check that dimensions were passed.
         if dimensions_csv:
-            dimensions = dimensions_csv.split(",")
-        else:
-            dimensions = []
+            self._dimensions = dimensions_csv.split(",")
         slicename = ""
-        for dim in dimensions:
+        for dim in self._dimensions:
             blank = BNode()
             self._g.add((dd, component, blank))
             self._g.add((blank, dimension, self._get_ns("sibis")[dim]))
@@ -288,7 +287,7 @@ class Transformer(object):
                 self._g.add((blank, component_attachment, observation))
             else:
                 self._g.add((blank, component_attachment, qb_slice))
-                slicename += dimensions[index - 1].title()
+                slicename += self._dimensions[index - 1].title()
                 slice_by = self._get_ns("sibis")["sliceBy" + slicename]
                 self._g.add((dd, slice_key, slice_by))
                 if slicename in slices_map:
@@ -301,14 +300,14 @@ class Transformer(object):
                                                   lang=md[COMMENT_LANG])
                         self._g.add((slice_by, comment, comment_literal))
                 for slice_idx in range(1, index):
-                    dim = self._get_ns("sibis")[dimensions[slice_idx]]
+                    dim = self._get_ns("sibis")[self._dimensions[slice_idx]]
                     self._g.add((slice_by, component_property, dim))
                     self._g.add((slice_by, rdf_type, slice_key_type))
             index += 1
 
         # Add measures.
         for field in self._fields:
-            if field not in dimensions:
+            if field not in self._dimensions:
                 blank = BNode()
                 measure_field = self._get_ns("ncanda")[field]
                 self._g.add((dd, component, blank))
@@ -358,8 +357,11 @@ class Transformer(object):
                 self._g.add((obs, rdf_type, observation))
                 self._g.add((obs, dataset, dd))
                 for key, vals in self._config_dict.iteritems():
-                    field_name = self._get_ns("ncanda")[vals[FIELD_NAME]]
-                    self._g.add((obs, field_name, Literal(row[key])))
+                    field_name = vals[FIELD_NAME]
+                    # Only include the first dimension at the observation level.
+                    if field_name not in self._dimensions[1:]:
+                        field_name_iri = self._get_ns("ncanda")[field_name]
+                        self._g.add((obs, field_name_iri, Literal(row[key])))
                 index += 1
 
     def display_graph(self):
