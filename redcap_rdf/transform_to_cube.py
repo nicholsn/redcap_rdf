@@ -8,6 +8,7 @@
 """
 import os
 import csv
+import hashlib
 
 from rdflib import BNode, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
@@ -30,6 +31,7 @@ CONCEPT = "concept"
 CATEGORIES = "categories"
 STATISTIC = "statistic"
 UNITS = "units"
+RANGE = "range"
 
 # Header columns for metadata
 DATASET_ID = "dataset_id"
@@ -61,20 +63,48 @@ class Transformer(object):
         self._ns_dict = {}
         self._config_dict = {}
         self._add_prefixes()
+        self._datadict = ""
+        self._fields = []
+        self._dimensions = []
 
-    def build_graph(self, dd, config):
+    def query(self, query_object, processor='sparql', result='sparql',
+              init_ns=None, init_bindings=None, use_store_provided=True,
+              **kwargs):
+        """
+        Query this graph.
+
+        Args:
+            query_object (str): A SPARQL query.
+            processor (str): Query processor to use.
+            result (str): Result processor to use.
+            init_ns (dict): A type of 'prepared queries' can be realised by
+                providing initial variable bindings with init_bindings.
+            init_bindings (dict): Initial namespaces are used to resolve
+                prefixes used in the query, if none are given, the namespaces
+                from the graph's namespace manager are used.
+            use_store_provided (bool): Use the provided sparql store.
+            **kwargs:
+
+        Returns:
+            An rdflib.query.QueryResult object.
+
+        """
+        return self._g.query(query_object, processor, result, init_ns,
+                             init_bindings, use_store_provided, **kwargs)
+
+    def build_graph(self, dd, mapping):
         """Constructs a graph from the data dictionary using a config file.
 
         Args:
             dd (str): Path to the data dictionary csv file.
-            config (str): Path to a csv formatted config with supplementary
+            mapping (str): Path to a csv formatted config with supplementary
                 information file.
 
         Returns:
             None
 
         """
-        self._build_config_lookup(config)
+        self._build_config_lookup(mapping)
         if dd is None:
             log("Data dictionary file not provided")
             return
@@ -85,6 +115,7 @@ class Transformer(object):
         log("Processing: {}".format(dd))
 
         # constants
+        rdf_type = self._get_ns("rdf")["type"]
         rdf_property = self._get_ns("rdf")["Property"]
         dimension_property = self._get_ns("qb")["DimensionProperty"]
         measure_property = self._get_ns("qb")["MeasureProperty"]
@@ -92,31 +123,54 @@ class Transformer(object):
         rdfs_label = self._get_ns("rdfs")["label"]
         rdfs_subPropertyOf = self._get_ns("rdfs")["subPropertyOf"]
         rdfs_range = self._get_ns("rdfs")["range"]
+        unit_measure = self._get_ns("sibis")["unitMeasure"]
+        statistic = self._get_ns("sibis")["statistic"]
 
         self._datadict = os.path.basename(dd)
         with open(dd) as f:
             reader = csv.DictReader(f)
             for row in reader:
                 field_name = row[FIELD_NAME]
+                field_label = row[FIELD_LABEL]
                 self._fields.append(field_name)
-                # TODO: Use Field Label if available else field_name.split('_')
-                # and capitalize and join with a space.
                 node = self._get_ns("ncanda")[field_name]
-                self._g.add((node, rdfs_label, Literal(field_name)))
+                # Default to MeasureProperty.
                 prop = measure_property
+                # Use field_name to create "Field Name" label.
+                if field_label:
+                    label = field_label
+                else:
+                    split = [i.capitalize() for i in field_label.split('_')]
+                    label = ' '.join(split)
+                self._g.add((node, rdfs_label, Literal(label)))
+                # Set prop for dimension properties.
                 if (field_name in self._config_dict and
                         DIMENSION in self._config_dict[field_name]):
                     if self._config_dict[field_name][DIMENSION] == "y":
                         prop = dimension_property
-                self._g.add((node, rdf_property, prop))
+                self._g.add((node, rdf_type, prop))
+                self._g.add((node, rdf_type, rdf_property))
+                # Annotate with Concepts.
                 if (field_name in self._config_dict and
                         CONCEPT in self._config_dict[field_name]):
                     obj = URIRef(self._config_dict[field_name][CONCEPT])
                     self._g.add((node, concept, obj))
+                # Annotate with Range.
+                if (field_name in self._config_dict and
+                        RANGE in self._config_dict[field_name]):
+                    obj = URIRef(self._config_dict[field_name][RANGE])
+                    self._g.add((node, rdfs_range, obj))
+                # Annotate with Units.
                 if (field_name in self._config_dict and
                         UNITS in self._config_dict[field_name]):
-                    obj = self._get_term(self._config_dict[field_name][UNITS])
-                    self._g.add((node, rdfs_range, obj))
+                    obj = URIRef(self._config_dict[field_name][UNITS])
+                    self._g.add((node, unit_measure, obj))
+                # Annotate with Statistic.
+                if (field_name in self._config_dict and
+                        STATISTIC in self._config_dict[field_name]):
+                    obj = URIRef(self._config_dict[field_name][STATISTIC])
+                    self._g.add((node, statistic, obj))
+                # Todo: Create qb:codeList for dimension and categorical data
 
     def add_metadata(self, metadata_path):
         """Adds the dataset metadata to the graph
@@ -162,7 +216,8 @@ class Transformer(object):
                 self._g.add((term, title, Literal(md_title)))
                 self._g.add((term, description, Literal(md_description)))
                 self._g.add((term, publisher, Literal(md_publisher)))
-                self._g.add((term, issued, Literal(md_issued, datatype=XSD.date)))
+                self._g.add((term, issued, Literal(md_issued,
+                                                   datatype=XSD.date)))
                 self._g.add((term, subject, URIRef(md_subject)))
 
     def add_dsd(self, dimensions_csv, slices):
@@ -177,7 +232,10 @@ class Transformer(object):
             None
 
         """
-        dd = URIRef(self._datadict)
+        if self._datadict:
+            dd = self._get_ns('sibis')[self._datadict]
+        else:
+            dd = URIRef(self._datadict)
 
         # read slices file
         slices_map = {}
@@ -190,7 +248,9 @@ class Transformer(object):
 
         # constants
         rdf_type = self._get_ns("rdf")["type"]
+        dataset = self._get_ns("qb")["DataSet"]
         dsd = self._get_ns("qb")["DataStructureDefinition"]
+        structure = self._get_ns("qb")["structure"]
         observation = self._get_ns("qb")["Observation"]
         qb_slice = self._get_ns("qb")["Slice"]
         component = self._get_ns("qb")["component"]
@@ -199,6 +259,7 @@ class Transformer(object):
         order = self._get_ns("qb")["order"]
         measure = self._get_ns("qb")["measure"]
         slice_key = self._get_ns("qb")["sliceKey"]
+        slice_key_type = self._get_ns("qb")["SliceKey"]
         label = self._get_ns("rdfs")["label"]
         comment = self._get_ns("rdfs")["comment"]
         component_property = self._get_ns("qb")["componentProperty"]
@@ -206,15 +267,18 @@ class Transformer(object):
         node = (dd, rdf_type, dsd)
         self._g.add(node)
 
-        # add dimension
+        # Link to dataset.
+        dataset_uri = list(self._g.subjects(rdf_type, dataset))
+        if dataset_uri:
+            self._g.add((dataset_uri[0], structure, dd))
+
+        # Add dimension.
         index = 1
-        # check that dimensions were passed
-        if 0 < len(dimensions_csv):
-            dimensions = dimensions_csv.split(",")
-        else:
-            dimensions = []
+        # Check that dimensions were passed.
+        if dimensions_csv:
+            self._dimensions = dimensions_csv.split(",")
         slicename = ""
-        for dim in dimensions:
+        for dim in self._dimensions:
             blank = BNode()
             self._g.add((dd, component, blank))
             self._g.add((blank, dimension, self._get_ns("sibis")[dim]))
@@ -223,7 +287,7 @@ class Transformer(object):
                 self._g.add((blank, component_attachment, observation))
             else:
                 self._g.add((blank, component_attachment, qb_slice))
-                slicename += dimensions[index - 1].title()
+                slicename += self._dimensions[index - 1].title()
                 slice_by = self._get_ns("sibis")["sliceBy" + slicename]
                 self._g.add((dd, slice_key, slice_by))
                 if slicename in slices_map:
@@ -232,21 +296,24 @@ class Transformer(object):
                         label_literal = Literal(md[LABEL], lang=md[LABEL_LANG])
                         self._g.add((slice_by, label, label_literal))
                     if len(md[COMMENT]) > 0:
-                        comment_literal = Literal(md[COMMENT], lang=md[COMMENT_LANG])
+                        comment_literal = Literal(md[COMMENT],
+                                                  lang=md[COMMENT_LANG])
                         self._g.add((slice_by, comment, comment_literal))
                 for slice_idx in range(1, index):
-                    dim = self._get_ns("sibis")[dimensions[slice_idx]]
+                    dim = self._get_ns("sibis")[self._dimensions[slice_idx]]
                     self._g.add((slice_by, component_property, dim))
-            index = index + 1
+                    self._g.add((slice_by, rdf_type, slice_key_type))
+            index += 1
 
-        # add measures
+        # Add measures.
         for field in self._fields:
-            if field not in dimensions:
+            if field not in self._dimensions:
                 blank = BNode()
+                measure_field = self._get_ns("ncanda")[field]
                 self._g.add((dd, component, blank))
-                self._g.add((blank, measure, self._get_ns("sibis")[field]))
+                self._g.add((blank, measure, measure_field))
 
-        # add attributes
+        # Add attributes.
         attribute = self._get_ns("qb")["attribute"]
         component_required = self._get_ns("qb")["componentRequired"]
         measure_property = self._get_ns("qb")["MeasureProperty"]
@@ -254,7 +321,8 @@ class Transformer(object):
         blank = BNode()
         self._g.add((dd, component, blank))
         self._g.add((blank, attribute, unit_measure))
-        self._g.add((blank, component_required, Literal("true", datatype=XSD.boolean)))
+        self._g.add((blank, component_required, Literal("true",
+                                                        datatype=XSD.boolean)))
         self._g.add((blank, component_attachment, measure_property))
 
     def add_observations(self, observations):
@@ -269,10 +337,13 @@ class Transformer(object):
         if not os.path.isfile(observations):
             print("{} file not found".format(observations))
             return
-        print("Processing: {}".format(observations))
+        log("Processing: {}".format(observations))
 
         # constants
-        dd = URIRef(self._datadict)
+        if self._datadict:
+            dd = self._get_ns('sibis')[self._datadict]
+        else:
+            dd = URIRef(self._datadict)
         rdf_type = self._get_ns("rdf")["type"]
         observation = self._get_ns("qb")["Observation"]
         dataset = self._get_ns("qb")["dataSet"]
@@ -281,13 +352,17 @@ class Transformer(object):
             reader = csv.DictReader(f)
             index = 0
             for row in reader:
-                obs = Literal("obs{}".format(index))
+                sha1 = hashlib.sha1(str(row)).hexdigest()
+                obs = self._get_ns('iri')[sha1]
                 self._g.add((obs, rdf_type, observation))
                 self._g.add((obs, dataset, dd))
                 for key, vals in self._config_dict.iteritems():
-                    concept = URIRef(vals[CONCEPT])
-                    self._g.add((obs, concept, Literal(row[key])))
-                index = index + 1
+                    field_name = vals[FIELD_NAME]
+                    # Only include the first dimension at the observation level.
+                    if field_name not in self._dimensions[1:]:
+                        field_name_iri = self._get_ns("ncanda")[field_name]
+                        self._g.add((obs, field_name_iri, Literal(row[key])))
+                index += 1
 
     def display_graph(self):
         """Print the RDF file to stdout in turtle format.
@@ -296,7 +371,7 @@ class Transformer(object):
             None
 
         """
-        print(self._g.serialize(format='n3'))
+        print(self._g.serialize(format='turtle'))
 
     def _add_prefix(self, prefix, namespace):
         ns = Namespace(namespace)
@@ -311,6 +386,8 @@ class Transformer(object):
         self._add_prefix("fs", "http://www.incf.org/ns/nidash/fs#")
         self._add_prefix("qb", "http://purl.org/linked-data/cube#")
         self._add_prefix("sibis", "http://sibis.sri.com/terms#")
+        self._add_prefix("iri", "http://sibis.sri.com/iri/")
+        self._add_prefix("obo", "http://purl.obolibrary.org/obo/")
 
         # add in builtins
         self._add_prefix("owl", OWL)
@@ -330,12 +407,6 @@ class Transformer(object):
             return self._ns_dict[prefix]
         return None
 
-    def _get_term(self, term):
-        parts = term.split(":")
-        ns = parts[0]
-        resource = parts[1]
-        return self._get_ns(ns)[resource]
-
     def _build_config_lookup(self, config):
         if config is None:
             log("Mapping file not provided")
@@ -351,10 +422,3 @@ class Transformer(object):
                 # drop empty values
                 res = dict((k, v) for k, v in row.iteritems() if v is not "")
                 self._config_dict[row[FIELD_NAME]] = res
-
-    # 'private' member data
-    _g = Graph()
-    _ns_dict = {}
-    _config_dict = {}
-    _datadict = ""
-    _fields = []

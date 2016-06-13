@@ -1,0 +1,8 @@
+# https://dvcs.w3.org/hg/gld/raw-file/default/data-cube/index.html#ic-13
+
+ASK {
+    ?obs qb:dataSet/qb:structure/qb:component ?component .
+    ?component qb:componentRequired "true"^^xsd:boolean ;
+               qb:componentProperty ?attr .
+    FILTER NOT EXISTS { ?obs ?attr [] }
+}

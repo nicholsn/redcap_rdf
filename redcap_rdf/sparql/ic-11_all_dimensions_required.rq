@@ -1,0 +1,7 @@
+# https://dvcs.w3.org/hg/gld/raw-file/default/data-cube/index.html#ic-11
+
+ASK {
+    ?obs qb:dataSet/qb:structure/qb:component/qb:componentProperty ?dim .
+    ?dim a qb:DimensionProperty;
+    FILTER NOT EXISTS { ?obs ?dim [] }
+}
