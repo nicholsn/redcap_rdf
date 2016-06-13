@@ -87,3 +87,9 @@ def test_ic5():
     ic = "ic-5_concept_dimensions_have_code_lists"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic6():
+    ic = "ic-6_only_attributes_may_be_optional"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
