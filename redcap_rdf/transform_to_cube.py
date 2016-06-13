@@ -289,8 +289,9 @@ class Transformer(object):
                 self._g.add((blank, component_attachment, qb_slice))
                 slicename += self._dimensions[index - 1].title()
                 slice_by = self._get_ns("sibis")["sliceBy" + slicename]
-                self._g.add((dd, slice_key, slice_by))
+                # Only add slices defined in csv inputs
                 if slicename in slices_map:
+                    self._g.add((dd, slice_key, slice_by))
                     md = slices_map[slicename]
                     if len(md[LABEL]) > 0:
                         label_literal = Literal(md[LABEL], lang=md[LABEL_LANG])
@@ -299,10 +300,10 @@ class Transformer(object):
                         comment_literal = Literal(md[COMMENT],
                                                   lang=md[COMMENT_LANG])
                         self._g.add((slice_by, comment, comment_literal))
-                for slice_idx in range(1, index):
-                    dim = self._get_ns("sibis")[self._dimensions[slice_idx]]
-                    self._g.add((slice_by, component_property, dim))
-                    self._g.add((slice_by, rdf_type, slice_key_type))
+                    for slice_idx in range(1, index):
+                        dim = self._get_ns("sibis")[self._dimensions[slice_idx]]
+                        self._g.add((slice_by, component_property, dim))
+                        self._g.add((slice_by, rdf_type, slice_key_type))
             index += 1
 
         # Add measures.
@@ -345,23 +346,37 @@ class Transformer(object):
         else:
             dd = URIRef(self._datadict)
         rdf_type = self._get_ns("rdf")["type"]
-        observation = self._get_ns("qb")["Observation"]
+        observation_type = self._get_ns("qb")["Observation"]
+        observation = self._get_ns("qb")["observation"]
+        slice = self._get_ns("qb")["Slice"]
+        slice_structure = self._get_ns("qb")["sliceStructure"]
         dataset = self._get_ns("qb")["dataSet"]
 
         with open(observations) as f:
             reader = csv.DictReader(f)
             index = 0
             for row in reader:
-                sha1 = hashlib.sha1(str(row)).hexdigest()
-                obs = self._get_ns('iri')[sha1]
-                self._g.add((obs, rdf_type, observation))
+                obs_sha1 = hashlib.sha1(str(row)).hexdigest()
+                obs = self._get_ns('iri')[obs_sha1]
+                slice_vals = [row.get(i) for i in self._dimensions[1:]]
+                slice_sha1 = hashlib.sha1(str(slice_vals)).hexdigest()
+                slice_iri = self._get_ns('iri')[slice_sha1]
+                self._g.add((obs, rdf_type, observation_type))
                 self._g.add((obs, dataset, dd))
+                self._g.add((slice_iri, rdf_type, slice))
+                self._g.add((slice_iri, slice_structure, dd))
                 for key, vals in self._config_dict.iteritems():
                     field_name = vals[FIELD_NAME]
+                    field_name_iri = self._get_ns("ncanda")[field_name]
                     # Only include the first dimension at the observation level.
                     if field_name not in self._dimensions[1:]:
-                        field_name_iri = self._get_ns("ncanda")[field_name]
                         self._g.add((obs, field_name_iri, Literal(row[key])))
+                        self._g.add((slice_iri, observation, obs))
+                    else:
+                        # Add slice indices.
+                        self._g.add((slice_iri,
+                                     field_name_iri,
+                                     Literal(row[key])))
                 index += 1
 
     def display_graph(self):

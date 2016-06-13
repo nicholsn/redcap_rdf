@@ -1,4 +1,19 @@
 # https://dvcs.w3.org/hg/gld/raw-file/default/data-cube/index.html#ic-9
+#
+# Note: On line 12 there is a missing period.
+#
+#ASK {
+#  {
+#    # Slice has a key
+#    ?slice a qb:Slice .
+#    FILTER NOT EXISTS { ?slice qb:sliceStructure ?key }
+#  } UNION {
+#    # Slice has just one key
+#    ?slice a qb:Slice ;
+#           qb:sliceStructure ?key1, ?key2;
+#   FILTER (?key1 != ?key2)
+# }
+#}
 
 ASK {
   {
@@ -8,7 +23,7 @@ ASK {
   } UNION {
     # Slice has just one key
     ?slice a qb:Slice ;
-           qb:sliceStructure ?key1, ?key2;
+           qb:sliceStructure ?key1, ?key2 .
     FILTER (?key1 != ?key2)
   }
 }
