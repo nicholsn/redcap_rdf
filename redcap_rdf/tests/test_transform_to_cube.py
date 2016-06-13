@@ -60,20 +60,30 @@ def test_add_observations():
 
 
 def test_ic1():
-    result = ic_transformer.query(queries.get("ic-1_unique_dataset"))
+    ic = "ic-1_unique_dataset"
+    result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
 
 
 def test_ic2():
-    result = ic_transformer.query(queries.get("ic-2_unique_dsd"))
+    ic = "ic-2_unique_dsd"
+    result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
 
 
 def test_ic3():
-    result = ic_transformer.query(queries.get("ic-3_dsd_includes_measure"))
+    ic = "ic-3_dsd_includes_measure"
+    result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
 
 
 def test_ic4():
-    result = ic_transformer.query(queries.get("ic-4_dimensions_have_range"))
+    ic = "ic-4_dimensions_have_range"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic5():
+    ic = "ic-5_concept_dimensions_have_code_lists"
+    result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
