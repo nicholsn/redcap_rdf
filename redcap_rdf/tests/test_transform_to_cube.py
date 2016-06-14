@@ -111,3 +111,81 @@ def test_ic9():
     ic = "ic-9_unique_slice_structure"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic10():
+    ic = "ic-10_slice_dimensions_complete"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic11():
+    ic = "ic-11_all_dimensions_required"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic12():
+    ic = "ic-12_no_duplicate_observations"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic13():
+    ic = "ic-13_required_attributes"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic14():
+    ic = "ic-14_all_measures_present"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic15():
+    ic = "ic-15_measure_dimension_consistent"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic16():
+    ic = "ic-16_single_measure_on_measure_dimension_observation"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic17():
+    ic = "ic-17_all_measures_present_in_measures_dimension_cube"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic18():
+    ic = "ic-18_consistent_dataset_links"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic19a():
+    ic = "ic-19a_codes_from_code_list"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic19b():
+    ic = "ic-19b_codes_from_code_list"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic20():
+    ic = "ic-20_codes_from_hierarchy"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic21():
+    ic = "ic-21_codes_from_hierarchy_inverse"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False

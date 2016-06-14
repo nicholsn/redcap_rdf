@@ -1,5 +1,17 @@
 # https://dvcs.w3.org/hg/gld/raw-file/default/data-cube/index.html#ic-14
-
+#
+# Note: No perod on line 11.
+#
+#ASK {
+#    # Observation in a non-measureType cube
+#    ?obs qb:dataSet/qb:structure ?dsd .
+#    FILTER NOT EXISTS { ?dsd qb:component/qb:componentProperty qb:measureType }
+#
+#    # verify every measure is present
+#   ?dsd qb:component/qb:componentProperty ?measure .
+#    ?measure a qb:MeasureProperty;
+#    FILTER NOT EXISTS { ?obs ?measure [] }
+#}
 ASK {
     # Observation in a non-measureType cube
     ?obs qb:dataSet/qb:structure ?dsd .
@@ -7,6 +19,6 @@ ASK {
 
     # verify every measure is present
     ?dsd qb:component/qb:componentProperty ?measure .
-    ?measure a qb:MeasureProperty;
+    ?measure a qb:MeasureProperty .
     FILTER NOT EXISTS { ?obs ?measure [] }
 }
