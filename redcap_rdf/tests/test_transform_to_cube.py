@@ -165,3 +165,15 @@ def test_ic18():
     ic = "ic-18_consistent_dataset_links"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic19a():
+    ic = "ic-19a_codes_from_code_list"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic19b():
+    ic = "ic-19b_codes_from_code_list"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
