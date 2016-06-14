@@ -159,3 +159,9 @@ def test_ic17():
     ic = "ic-17_all_measures_present_in_measures_dimension_cube"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic18():
+    ic = "ic-18_consistent_dataset_links"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
