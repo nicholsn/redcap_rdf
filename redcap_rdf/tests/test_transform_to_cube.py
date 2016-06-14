@@ -149,3 +149,9 @@ def test_ic15():
     assert result.askAnswer is False
 
 
+def test_ic16():
+    ic = "ic-16_single_measure_on_measure_dimension_observation"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
