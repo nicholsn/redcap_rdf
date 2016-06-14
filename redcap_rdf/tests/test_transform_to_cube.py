@@ -135,3 +135,9 @@ def test_ic13():
     ic = "ic-13_required_attributes"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic14():
+    ic = "ic-14_all_measures_present"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
