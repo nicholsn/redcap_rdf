@@ -183,3 +183,9 @@ def test_ic20():
     ic = "ic-20_codes_from_hierarchy"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic21():
+    ic = "ic-21_codes_from_hierarchy_inverse"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
