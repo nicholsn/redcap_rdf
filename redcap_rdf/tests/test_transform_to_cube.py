@@ -177,3 +177,9 @@ def test_ic19b():
     ic = "ic-19b_codes_from_code_list"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic20():
+    ic = "ic-20_codes_from_hierarchy"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
