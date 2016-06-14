@@ -111,3 +111,9 @@ def test_ic9():
     ic = "ic-9_unique_slice_structure"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic10():
+    ic = "ic-9_unique_slice_structure"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
