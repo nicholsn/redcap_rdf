@@ -129,3 +129,9 @@ def test_ic12():
     ic = "ic-12_no_duplicate_observations"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic13():
+    ic = "ic-13_required_attributes"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
