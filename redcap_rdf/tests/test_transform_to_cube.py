@@ -141,3 +141,11 @@ def test_ic14():
     ic = "ic-14_all_measures_present"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
+
+
+def test_ic15():
+    ic = "ic-15_measure_dimension_consistent"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
