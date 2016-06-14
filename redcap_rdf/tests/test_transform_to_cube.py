@@ -114,12 +114,18 @@ def test_ic9():
 
 
 def test_ic10():
-    ic = "ic-9_unique_slice_structure"
+    ic = "ic-10_slice_dimensions_complete"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
 
 
 def test_ic11():
     ic = "ic-11_all_dimensions_required"
+    result = ic_transformer.query(queries.get(ic))
+    assert result.askAnswer is False
+
+
+def test_ic12():
+    ic = "ic-12_no_duplicate_observations"
     result = ic_transformer.query(queries.get(ic))
     assert result.askAnswer is False
