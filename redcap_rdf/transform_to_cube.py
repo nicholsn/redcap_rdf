@@ -350,7 +350,13 @@ class Transformer(object):
         observation = self._get_ns("qb")["observation"]
         slice = self._get_ns("qb")["Slice"]
         slice_structure = self._get_ns("qb")["sliceStructure"]
-        dataset = self._get_ns("qb")["dataSet"]
+        dataset_type = self._get_ns("qb")["DataSet"]
+        dataset_rel = self._get_ns("qb")["dataSet"]
+        dataset_uriref = list(self._g.subjects(rdf_type, dataset_type))
+        if dataset_uriref:
+            dataset_uri = dataset_uriref[0]
+        else:
+            dataset_uri = URIRef("")
 
         with open(observations) as f:
             reader = csv.DictReader(f)
@@ -362,7 +368,7 @@ class Transformer(object):
                 slice_sha1 = hashlib.sha1(str(slice_vals)).hexdigest()
                 slice_iri = self._get_ns('iri')[slice_sha1]
                 self._g.add((obs, rdf_type, observation_type))
-                self._g.add((obs, dataset, dd))
+                self._g.add((obs, dataset_rel, dataset_uri))
                 self._g.add((slice_iri, rdf_type, slice))
                 self._g.add((slice_iri, slice_structure, dd))
                 for key, vals in self._config_dict.iteritems():
