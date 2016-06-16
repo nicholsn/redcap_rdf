@@ -1,7 +1,19 @@
 # https://dvcs.w3.org/hg/gld/raw-file/default/data-cube/index.html#ic-20
+#
+# Note: Use explicit reference to qb:dimension instead of super property:
+# qb:componentProperty
+#
+#ASK {
+#    ?obs qb:dataSet/qb:structure/qb:component/qb:componentProperty ?dim .
+#    ?dim a qb:DimensionProperty ;
+#        qb:codeList ?list .
+#    ?list a qb:HierarchicalCodeList .
+#    ?obs ?dim ?v .
+#    FILTER NOT EXISTS { ?list qb:hierarchyRoot/<$p>* ?v }
+#}
 
 ASK {
-    ?obs qb:dataSet/qb:structure/qb:component/qb:componentProperty ?dim .
+    ?obs qb:dataSet/qb:structure/qb:component/qb:dimension ?dim .
     ?dim a qb:DimensionProperty ;
         qb:codeList ?list .
     ?list a qb:HierarchicalCodeList .
