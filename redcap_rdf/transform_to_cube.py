@@ -430,7 +430,21 @@ class Transformer(object):
                     field_name_iri = self.ns.get("ncanda")[field_name]
                     # Only include the first dimension at the observation level.
                     if field_name not in self._dimensions[1:]:
-                        self._g.add((obs, field_name_iri, Literal(row[key])))
+                        # Get the rdfs:range to determine datatype.
+                        rdfs_ranges = list(self._g.objects(
+                            field_name_iri, self.terms.rdfs_range))
+                        rdfs_range_iri = rdfs_ranges[0]
+                        # If the range is not an XSD Literal (i.e., this is an
+                        # object property), set to xsd:anyURI.
+                        xsd = str(XSD[''].defrag())
+                        if str(rdfs_range_iri.defrag()) != xsd:
+                            rdfs_range_iri = XSD['anyURI']
+                        # TODO: Use concept from code list instead of a Literal
+                        # for coded values.
+                        self._g.add((obs,
+                                     field_name_iri,
+                                     Literal(row[key],
+                                             datatype=rdfs_range_iri)))
                         self._g.add((slice_iri, self.terms.observation, obs))
                     else:
                         # Add slice indices.
