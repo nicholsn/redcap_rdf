@@ -1,0 +1,14 @@
+{
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "qb": "http://purl.org/linked-data/cube#",
+    "ncanda": "http://ncanda.sri.com/terms.ttl#",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "sibis": "http://sibis.sri.com/terms#",
+    "iri": "http://sibis.sri.com/iri/",
+    "label": "rdfs:label",
+    "range": "rdfs:range"
+  }
+}

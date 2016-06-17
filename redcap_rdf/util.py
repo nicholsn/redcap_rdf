@@ -18,3 +18,15 @@ def log(msg):
     """
     sys.stderr.write(msg)
     sys.stderr.write("\n")
+
+
+class AttrDict(dict):
+    """Attribute based access to a dictionary.
+
+    Returns:
+        An instance of an attributed dictionary.
+
+    """
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self

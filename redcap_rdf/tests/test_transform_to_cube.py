@@ -34,7 +34,7 @@ def test_build_graph():
     transformer = Transformer()
     transformer.build_graph(dd, mapping)
     subjects = [i.n3() for i in transformer._g.subjects()]
-    assert '<http://ncanda.sri.com/terms.ttl#subject>' in subjects
+    assert '<http://ncanda.sri.com/terms#subject>' in subjects
 
 
 def test_add_metadata():
@@ -48,7 +48,7 @@ def test_add_dsd():
     transformer = Transformer()
     transformer.add_dsd(dimensions_csv, slices)
     subjects = [i.n3() for i in transformer._g.subjects()]
-    assert "<http://sibis.sri.com/terms#sliceByArmVisit>" in subjects
+    assert "<http://ncanda.sri.com/terms#sliceByArmVisit>" in subjects
 
 
 def test_add_observations():
