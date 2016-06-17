@@ -2,9 +2,7 @@
 ##  See COPYING file distributed along with the redcap_rdf package for the
 ##  copyright and license terms
 ##
-""" Data Dictionary Transformer to Semantic
-
-@author: Victor Meyerson
+""" Data Dictionary Transformer to RDF Data Cube.
 """
 import os
 import csv
@@ -13,7 +11,7 @@ import hashlib
 from rdflib import BNode, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
 
-from redcap_rdf.util import log
+from redcap_rdf.util import log, AttrDict
 
 # Header columns for data dictionary
 FIELD_NAME = "Variable / Field Name"
@@ -60,12 +58,15 @@ class Transformer(object):
     Definition graph.
 
     """
+
     def __init__(self):
         # clear internal data structures
         self._g = Graph()
         self._ns_dict = {}
+        self._terms_dict = {}
         self._config_dict = {}
         self._add_prefixes()
+        self._add_terms()
         self._datadict = ""
         self._fields = []
         self._dimensions = []
@@ -117,28 +118,6 @@ class Transformer(object):
             return
         log("Processing: {}".format(dd))
 
-        # constants
-        owl_class = self.ns.get("owl")["Class"]
-        rdf_type = self.ns.get("rdf")["type"]
-        rdf_property = self.ns.get("rdf")["Property"]
-        dimension_property = self.ns.get("qb")["DimensionProperty"]
-        measure_property = self.ns.get("qb")["MeasureProperty"]
-        concept_rel = self.ns.get("qb")["concept"]
-        rdfs_label = self.ns.get("rdfs")["label"]
-        rdfs_subproperty_of = self.ns.get("rdfs")["subPropertyOf"]
-        rdfs_subclass_of = self.ns.get("rdfs")["subClassOf"]
-        rdfs_range = self.ns.get("rdfs")["range"]
-        rdfs_see_also = self.ns.get("rdfs")["seeAlso"]
-        unit_measure = self.ns.get("sibis")["unitMeasure"]
-        statistic = self.ns.get("sibis")["statistic"]
-        concept_scheme = self.ns.get("skos")["ConceptScheme"]
-        concept = self.ns.get("skos")["Concept"]
-        has_top_concept = self.ns.get("skos")["hasTopConcept"]
-        top_concept_of = self.ns.get("skos")["topConceptOf"]
-        in_scheme = self.ns.get("skos")["inScheme"]
-        pref_label = self.ns.get("skos")["prefLabel"]
-        notation = self.ns.get("skos")["notation"]
-
         self._datadict = os.path.basename(dd)
         with open(dd) as f:
             reader = csv.DictReader(f)
@@ -148,69 +127,79 @@ class Transformer(object):
                 self._fields.append(field_name)
                 node = self.ns.get("ncanda")[field_name]
                 # Default to MeasureProperty.
-                prop = measure_property
+                prop = self.terms.measure_property_type
                 # Use field_name to create "Field Name" label.
                 if field_label:
                     label = field_label
                 else:
                     split = [i.capitalize() for i in field_label.split('_')]
                     label = ' '.join(split)
-                self._g.add((node, rdfs_label, Literal(label)))
+                self._g.add((node, self.terms.rdfs_label, Literal(label)))
                 # Set prop for dimension properties.
                 if (field_name in self._config_dict and
                         DIMENSION in self._config_dict[field_name]):
                     if self._config_dict[field_name][DIMENSION] == "y":
-                        prop = dimension_property
-                self._g.add((node, rdf_type, prop))
-                self._g.add((node, rdf_type, rdf_property))
+                        prop = self.terms.dimension_property_type
+                self._g.add((node, self.terms.rdf_type, prop))
+                self._g.add((node,
+                             self.terms.rdf_type,
+                             self.terms.property_type))
                 # Annotate with Concepts.
                 if (field_name in self._config_dict and
                         CONCEPT in self._config_dict[field_name]):
                     obj = URIRef(self._config_dict[field_name][CONCEPT])
-                    self._g.add((node, concept_rel, obj))
+                    self._g.add((node, self.terms.concept, obj))
                 # Annotate with Range.
                 if (field_name in self._config_dict and
                         RANGE in self._config_dict[field_name]):
                     xsd_type = URIRef(self._config_dict[field_name][RANGE])
                 else:
                     xsd_type = self._data_element_type(row)
-                self._g.add((node, rdfs_range, xsd_type))
+                self._g.add((node, self.terms.rdfs_range, xsd_type))
                 # Annotate with Units.
                 if (field_name in self._config_dict and
                         UNITS in self._config_dict[field_name]):
                     obj = URIRef(self._config_dict[field_name][UNITS])
-                    self._g.add((node, unit_measure, obj))
+                    self._g.add((node, self.terms.unit_measure, obj))
                 # Annotate with Statistic.
                 if (field_name in self._config_dict and
                         STATISTIC in self._config_dict[field_name]):
                     obj = URIRef(self._config_dict[field_name][STATISTIC])
-                    self._g.add((node, statistic, obj))
+                    self._g.add((node, self.terms.statistic, obj))
                 # Todo: Create qb:codeList for dimension and categorical data
                 if (field_name in self._config_dict and
                         row[CHOICES]):
                     # Create a skos:Concept Class.
                     class_label = ''.join([i.capitalize()
-                                          for i in field_name.split('_')])
+                                           for i in field_name.split('_')])
                     class_uri = self.ns.get("ncanda")[class_label]
-                    self._g.add((class_uri, rdf_type, owl_class))
-                    self._g.add((class_uri, rdfs_subclass_of, concept))
+                    self._g.add((class_uri,
+                                 self.terms.rdf_type,
+                                 self.terms.owl_class))
+                    self._g.add((class_uri,
+                                 self.terms.rdfs_subclass_of,
+                                 self.terms.concept_type))
                     title = "Code List Class for '{}' term."
                     self._g.add((class_uri,
-                                 rdfs_label,
+                                 self.terms.rdfs_label,
                                  Literal(title.format(
                                      field_label))))
                     # Create a skos:ConceptScheme.
                     scheme_label = "{}_concept_scheme".format(field_name)
                     concept_scheme_uri = self.ns.get("ncanda")[scheme_label]
-                    self._g.add((concept_scheme_uri, rdf_type, concept_scheme))
                     self._g.add((concept_scheme_uri,
-                                 notation,
+                                 self.terms.rdf_type,
+                                 self.terms.concept_scheme_type))
+                    self._g.add((concept_scheme_uri,
+                                 self.terms.notation,
                                  Literal(field_name)))
                     self._g.add((concept_scheme_uri,
-                                 rdfs_label,
+                                 self.terms.rdfs_label,
                                  Literal("Code List for '{}' term.".format(
                                      field_label))))
-                    self._g.add((class_uri, rdfs_see_also, concept_scheme_uri))
+                    self._g.add((class_uri,
+                                 self.terms.rdfs_see_also,
+                                 concept_scheme_uri))
                     choices = row[CHOICES].split("|")
                     # Create skos:Concept for each code.
                     for choice in choices:
@@ -219,20 +208,26 @@ class Transformer(object):
                         code_label = v.strip()
                         choice_uri = self.ns.get("ncanda")['-'.join(
                             [field_name, code])]
-                        self._g.add((choice_uri, rdf_type, concept))
-                        self._g.add((choice_uri, rdf_type, class_uri))
-                        self._g.add((choice_uri, notation, Literal(code)))
                         self._g.add((choice_uri,
-                                     top_concept_of,
+                                     self.terms.rdf_type,
+                                     self.terms.concept_type))
+                        self._g.add((choice_uri,
+                                     self.terms.rdf_type,
+                                     class_uri))
+                        self._g.add((choice_uri,
+                                     self.terms.notation,
+                                     Literal(code)))
+                        self._g.add((choice_uri,
+                                     self.terms.top_concept_of,
                                      concept_scheme_uri))
                         self._g.add((choice_uri,
-                                     pref_label,
+                                     self.terms.pref_label,
                                      Literal(code_label)))
                         self._g.add((concept_scheme_uri,
-                                     has_top_concept,
+                                     self.terms.has_top_concept,
                                      choice_uri))
                         self._g.add((concept_scheme_uri,
-                                     in_scheme,
+                                     self.terms.in_scheme,
                                      choice_uri))
 
     def add_metadata(self, metadata_path):
@@ -255,14 +250,6 @@ class Transformer(object):
             return
         log("Metadata processing: {}".format(metadata_path))
 
-        # constants
-        dataset = self.ns.get("qb")["DataSet"]
-        title = self.ns.get("dct")["title"]
-        description = self.ns.get("dct")["description"]
-        publisher = self.ns.get("dct")["publisher"]
-        issued = self.ns.get("dct")["issued"]
-        subject = self.ns.get("dct")["subject"]
-
         with open(metadata_path) as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -274,14 +261,25 @@ class Transformer(object):
                 md_subject = row[SUBJECT]
 
                 term = URIRef(md_dataset_id)
-                rdf_type = self.ns.get("rdf")["type"]
-                self._g.add((term, rdf_type, dataset))
-                self._g.add((term, title, Literal(md_title)))
-                self._g.add((term, description, Literal(md_description)))
-                self._g.add((term, publisher, Literal(md_publisher)))
-                self._g.add((term, issued, Literal(md_issued,
-                                                   datatype=XSD['date'])))
-                self._g.add((term, subject, URIRef(md_subject)))
+                self._g.add((term,
+                             self.terms.rdf_type,
+                             self.terms.dataset_type))
+                self._g.add((term,
+                             self.terms.title,
+                             Literal(md_title)))
+                self._g.add((term,
+                             self.terms.description,
+                             Literal(md_description)))
+                self._g.add((term,
+                             self.terms.publisher,
+                             Literal(md_publisher)))
+                self._g.add((term,
+                             self.terms.issued,
+                             Literal(md_issued,
+                                     datatype=XSD['date'])))
+                self._g.add((term,
+                             self.terms.subject,
+                             URIRef(md_subject)))
 
     def add_dsd(self, dimensions_csv, slices):
         """Adds data structure definition to the RDF graph.
@@ -309,31 +307,14 @@ class Transformer(object):
                     slicename = row[SLICE]
                     slices_map[slicename] = row
 
-        # constants
-        rdf_type = self.ns.get("rdf")["type"]
-        dataset = self.ns.get("qb")["DataSet"]
-        dsd = self.ns.get("qb")["DataStructureDefinition"]
-        structure = self.ns.get("qb")["structure"]
-        observation = self.ns.get("qb")["Observation"]
-        qb_slice = self.ns.get("qb")["Slice"]
-        component = self.ns.get("qb")["component"]
-        component_attachment = self.ns.get("qb")["componentAttachment"]
-        dimension = self.ns.get("qb")["dimension"]
-        order = self.ns.get("qb")["order"]
-        measure = self.ns.get("qb")["measure"]
-        slice_key = self.ns.get("qb")["sliceKey"]
-        slice_key_type = self.ns.get("qb")["SliceKey"]
-        label = self.ns.get("rdfs")["label"]
-        comment = self.ns.get("rdfs")["comment"]
-        component_property = self.ns.get("qb")["componentProperty"]
-
-        node = (dd, rdf_type, dsd)
+        node = (dd, self.terms.rdf_type, self.terms.dsd_type)
         self._g.add(node)
 
         # Link to dataset.
-        dataset_uri = list(self._g.subjects(rdf_type, dataset))
+        dataset_uri = list(self._g.subjects(self.terms.rdf_type,
+                                            self.terms.dataset_type))
         if dataset_uri:
-            self._g.add((dataset_uri[0], structure, dd))
+            self._g.add((dataset_uri[0], self.terms.structure, dd))
 
         # Add dimension.
         index = 1
@@ -343,30 +324,45 @@ class Transformer(object):
         slicename = ""
         for dim in self._dimensions:
             blank = BNode()
-            self._g.add((dd, component, blank))
-            self._g.add((blank, dimension, self.ns.get("ncanda")[dim]))
-            self._g.add((blank, order, Literal(index)))
+            self._g.add((dd, self.terms.component, blank))
+            self._g.add((blank,
+                         self.terms.dimension,
+                         self.ns.get("ncanda")[dim]))
+            self._g.add((blank, self.terms.order, Literal(index)))
             if 1 == index:
-                self._g.add((blank, component_attachment, observation))
+                self._g.add((blank,
+                             self.terms.component_attachment,
+                             self.terms.observation_type))
             else:
-                self._g.add((blank, component_attachment, qb_slice))
+                self._g.add((blank,
+                             self.terms.component_attachment,
+                             self.terms.slice_type))
                 slicename += self._dimensions[index - 1].title()
                 slice_by = self.ns.get("ncanda")["sliceBy" + slicename]
                 # Only add slices defined in csv inputs
                 if slicename in slices_map:
-                    self._g.add((dd, slice_key, slice_by))
+                    self._g.add((dd, self.terms.slice_key, slice_by))
                     md = slices_map[slicename]
                     if len(md[LABEL]) > 0:
-                        label_literal = Literal(md[LABEL], lang=md[LABEL_LANG])
-                        self._g.add((slice_by, label, label_literal))
+                        label_literal = Literal(md[LABEL],
+                                                lang=md[LABEL_LANG])
+                        self._g.add((slice_by,
+                                     self.terms.rdfs_label,
+                                     label_literal))
                     if len(md[COMMENT]) > 0:
                         comment_literal = Literal(md[COMMENT],
                                                   lang=md[COMMENT_LANG])
-                        self._g.add((slice_by, comment, comment_literal))
+                        self._g.add((slice_by,
+                                     self.terms.rdfs_comment,
+                                     comment_literal))
                     for slice_idx in range(1, index):
                         dim = self.ns.get("ncanda")[self._dimensions[slice_idx]]
-                        self._g.add((slice_by, component_property, dim))
-                        self._g.add((slice_by, rdf_type, slice_key_type))
+                        self._g.add((slice_by,
+                                     self.terms.component_property,
+                                     dim))
+                        self._g.add((slice_by,
+                                     self.terms.rdf_type,
+                                     self.terms.slice_key_type))
             index += 1
 
         # Add measures.
@@ -374,20 +370,19 @@ class Transformer(object):
             if field not in self._dimensions:
                 blank = BNode()
                 measure_field = self.ns.get("ncanda")[field]
-                self._g.add((dd, component, blank))
-                self._g.add((blank, measure, measure_field))
+                self._g.add((dd, self.terms.component, blank))
+                self._g.add((blank, self.terms.measure, measure_field))
 
         # Add attributes.
-        attribute = self.ns.get("qb")["attribute"]
-        component_required = self.ns.get("qb")["componentRequired"]
-        measure_property = self.ns.get("qb")["MeasureProperty"]
-        unit_measure = self.ns.get("sibis")["unitMeasure"]
         blank = BNode()
-        self._g.add((dd, component, blank))
-        self._g.add((blank, attribute, unit_measure))
-        self._g.add((blank, component_required, Literal("true",
-                                                        datatype=XSD.boolean)))
-        self._g.add((blank, component_attachment, measure_property))
+        self._g.add((dd, self.terms.component, blank))
+        self._g.add((blank, self.terms.attribute, self.terms.unit_measure))
+        self._g.add((blank,
+                     self.terms.component_required,
+                     Literal("true", datatype=XSD.boolean)))
+        self._g.add((blank,
+                     self.terms.component_attachment,
+                     self.terms.measure_property_type))
 
     def add_observations(self, observations):
         """Adds a set of observations to the RDF graph
@@ -408,14 +403,8 @@ class Transformer(object):
             dd = self.ns.get('sibis')[self._datadict]
         else:
             dd = URIRef(self._datadict)
-        rdf_type = self.ns.get("rdf")["type"]
-        observation_type = self.ns.get("qb")["Observation"]
-        observation = self.ns.get("qb")["observation"]
-        slice = self.ns.get("qb")["Slice"]
-        slice_structure = self.ns.get("qb")["sliceStructure"]
-        dataset_type = self.ns.get("qb")["DataSet"]
-        dataset_rel = self.ns.get("qb")["dataSet"]
-        dataset_uriref = list(self._g.subjects(rdf_type, dataset_type))
+        dataset_uriref = list(self._g.subjects(self.terms.rdf_type,
+                                               self.terms.dataset_type))
         if dataset_uriref:
             dataset_uri = dataset_uriref[0]
         else:
@@ -428,17 +417,21 @@ class Transformer(object):
                 obs = self._get_sha1_iri(row)
                 slice_vals = [row.get(i) for i in self._dimensions[1:]]
                 slice_iri = self._get_sha1_iri(slice_vals)
-                self._g.add((obs, rdf_type, observation_type))
-                self._g.add((obs, dataset_rel, dataset_uri))
-                self._g.add((slice_iri, rdf_type, slice))
-                self._g.add((slice_iri, slice_structure, dd))
+                self._g.add((obs,
+                             self.terms.rdf_type,
+                             self.terms.observation_type))
+                self._g.add((obs, self.terms.dataset, dataset_uri))
+                self._g.add((slice_iri,
+                             self.terms.rdf_type,
+                             self.terms.slice_type))
+                self._g.add((slice_iri, self.terms.slice_structure, dd))
                 for key, vals in self._config_dict.iteritems():
                     field_name = vals[FIELD_NAME]
                     field_name_iri = self.ns.get("ncanda")[field_name]
                     # Only include the first dimension at the observation level.
                     if field_name not in self._dimensions[1:]:
                         self._g.add((obs, field_name_iri, Literal(row[key])))
-                        self._g.add((slice_iri, observation, obs))
+                        self._g.add((slice_iri, self.terms.observation, obs))
                     else:
                         # Add slice indices.
                         self._g.add((slice_iri,
@@ -486,7 +479,82 @@ class Transformer(object):
 
     @property
     def ns(self):
+        """
+        Get information from registered namespaces.
+
+        Returns:
+            A dictionary that returns an rdflib.URIRef.
+
+        """
         return self._ns_dict
+
+    def _add_terms(self):
+        result = AttrDict(
+            # NIDM properties.
+            unit_measure=self.ns.get("sibis")["unitMeasure"],
+            statistic=self.ns.get("sibis")["statistic"],
+
+            # Builtin classes.
+            owl_class=self.ns.get("owl")["Class"],
+            property_type=self.ns.get("rdf")["Property"],
+
+            # Builtin properties.
+            rdf_type=self.ns.get("rdf")["type"],
+            rdfs_comment=self.ns.get("rdfs")["comment"],
+            rdfs_label=self.ns.get("rdfs")["label"],
+            rdfs_subclass_of=self.ns.get("rdfs")["subClassOf"],
+            rdfs_range=self.ns.get("rdfs")["range"],
+            rdfs_see_also=self.ns.get("rdfs")["seeAlso"],
+            rdfs_subproperty_of=self.ns.get("rdfs")["subPropertyOf"],
+
+            # Data cube classes.
+            observation_type=self.ns.get("qb")["Observation"],
+            slice_type=self.ns.get("qb")["Slice"],
+            dataset_type=self.ns.get("qb")["DataSet"],
+            dsd_type=self.ns.get("qb")["DataStructureDefinition"],
+            slice_key_type=self.ns.get("qb")["SliceKey"],
+            dimension_property_type=self.ns.get("qb")["DimensionProperty"],
+            measure_property_type=self.ns.get("qb")["MeasureProperty"],
+
+            # Data cube properties.
+            slice_structure=self.ns.get("qb")["sliceStructure"],
+            observation=self.ns.get("qb")["observation"],
+            dataset=self.ns.get("qb")["dataSet"],
+            attribute=self.ns.get("qb")["attribute"],
+            component_required=self.ns.get("qb")["componentRequired"],
+            structure=self.ns.get("qb")["structure"],
+            component=self.ns.get("qb")["component"],
+            component_attachment=self.ns.get("qb")["componentAttachment"],
+            dimension=self.ns.get("qb")["dimension"],
+            order=self.ns.get("qb")["order"],
+            measure=self.ns.get("qb")["measure"],
+            slice_key=self.ns.get("qb")["sliceKey"],
+            component_property=self.ns.get("qb")["componentProperty"],
+            concept=self.ns.get("qb")["concept"],
+
+            # DC Terms properties.
+            title=self.ns.get("dct")["title"],
+            description=self.ns.get("dct")["description"],
+            publisher=self.ns.get("dct")["publisher"],
+            issued=self.ns.get("dct")["issued"],
+            subject=self.ns.get("dct")["subject"],
+
+            # SKOS classes.
+            concept_scheme_type=self.ns.get("skos")["ConceptScheme"],
+            concept_type=self.ns.get("skos")["Concept"],
+
+            # SKOS properties.
+            has_top_concept=self.ns.get("skos")["hasTopConcept"],
+            top_concept_of=self.ns.get("skos")["topConceptOf"],
+            in_scheme=self.ns.get("skos")["inScheme"],
+            pref_label=self.ns.get("skos")["prefLabel"],
+            notation=self.ns.get("skos")["notation"]
+        )
+        self._terms_dict = result
+
+    @property
+    def terms(self):
+        return self._terms_dict
 
     def _data_element_type(self, row):
         # Get the data type uri from data element description.
