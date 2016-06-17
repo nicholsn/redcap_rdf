@@ -25,7 +25,7 @@ TEXT_TYPE = "Text Validation Type OR Show Slider Number"
 TEXT_MIN = "Text Validation Min"
 TEXT_MAX = "Text Validation Max"
 
-# Header columns for mapping file
+# Header columns for mapping file.
 DIMENSION = "dimension"
 CONCEPT = "concept"
 CATEGORIES = "categories"
@@ -33,7 +33,7 @@ STATISTIC = "statistic"
 UNITS = "units"
 RANGE = "range"
 
-# Header columns for metadata
+# Header columns for metadata.
 DATASET_ID = "dataset_id"
 TITLE = "title"
 DESCRIPTION = "description"
@@ -42,12 +42,15 @@ ISSUED = "issued"
 SUBJECT = "subject"
 METADATA_HEADERS = [DATASET_ID, TITLE, DESCRIPTION, PUBLISHER, ISSUED, SUBJECT]
 
-# Header columns for slices
+# Header columns for slices.
 SLICE = "slice"
 LABEL = "label"
 LABEL_LANG = "label_lang"
 COMMENT = "comment"
 COMMENT_LANG = "comment_lang"
+
+# Project specific configuration.
+STUDY_ID = 'ncanda'
 
 
 class Transformer(object):
@@ -135,8 +138,6 @@ class Transformer(object):
         in_scheme = self.ns.get("skos")["inScheme"]
         pref_label = self.ns.get("skos")["prefLabel"]
         notation = self.ns.get("skos")["notation"]
-        # TODO: Make the NCANDA a configurable project namespace.
-        ncanda = self.ns.get("ncanda")
 
         self._datadict = os.path.basename(dd)
         with open(dd) as f:
@@ -170,8 +171,10 @@ class Transformer(object):
                 # Annotate with Range.
                 if (field_name in self._config_dict and
                         RANGE in self._config_dict[field_name]):
-                    obj = URIRef(self._config_dict[field_name][RANGE])
-                    self._g.add((node, rdfs_range, obj))
+                    xsd_type = URIRef(self._config_dict[field_name][RANGE])
+                else:
+                    xsd_type = self._data_element_type(row)
+                self._g.add((node, rdfs_range, xsd_type))
                 # Annotate with Units.
                 if (field_name in self._config_dict and
                         UNITS in self._config_dict[field_name]):
@@ -188,16 +191,17 @@ class Transformer(object):
                     # Create a skos:Concept Class.
                     class_label = ''.join([i.capitalize()
                                           for i in field_name.split('_')])
-                    class_uri = ncanda[class_label]
+                    class_uri = self.ns.get("ncanda")[class_label]
                     self._g.add((class_uri, rdf_type, owl_class))
                     self._g.add((class_uri, rdfs_subclass_of, concept))
+                    title = "Code List Class for '{}' term."
                     self._g.add((class_uri,
                                  rdfs_label,
-                                 Literal("Code List Class for '{}' term.".format(
+                                 Literal(title.format(
                                      field_label))))
                     # Create a skos:ConceptScheme.
                     scheme_label = "{}_concept_scheme".format(field_name)
-                    concept_scheme_uri = ncanda[scheme_label]
+                    concept_scheme_uri = self.ns.get("ncanda")[scheme_label]
                     self._g.add((concept_scheme_uri, rdf_type, concept_scheme))
                     self._g.add((concept_scheme_uri,
                                  notation,
@@ -213,7 +217,8 @@ class Transformer(object):
                         k, v = choice.split(',')
                         code = k.strip()
                         code_label = v.strip()
-                        choice_uri = ncanda['-'.join([field_name, code])]
+                        choice_uri = self.ns.get("ncanda")['-'.join(
+                            [field_name, code])]
                         self._g.add((choice_uri, rdf_type, concept))
                         self._g.add((choice_uri, rdf_type, class_uri))
                         self._g.add((choice_uri, notation, Literal(code)))
@@ -275,7 +280,7 @@ class Transformer(object):
                 self._g.add((term, description, Literal(md_description)))
                 self._g.add((term, publisher, Literal(md_publisher)))
                 self._g.add((term, issued, Literal(md_issued,
-                                                   datatype=XSD.date)))
+                                                   datatype=XSD['date'])))
                 self._g.add((term, subject, URIRef(md_subject)))
 
     def add_dsd(self, dimensions_csv, slices):
@@ -420,11 +425,9 @@ class Transformer(object):
             reader = csv.DictReader(f)
             index = 0
             for row in reader:
-                obs_sha1 = hashlib.sha1(str(row)).hexdigest()
-                obs = self.ns.get('iri')[obs_sha1]
+                obs = self._get_sha1_iri(row)
                 slice_vals = [row.get(i) for i in self._dimensions[1:]]
-                slice_sha1 = hashlib.sha1(str(slice_vals)).hexdigest()
-                slice_iri = self.ns.get('iri')[slice_sha1]
+                slice_iri = self._get_sha1_iri(slice_vals)
                 self._g.add((obs, rdf_type, observation_type))
                 self._g.add((obs, dataset_rel, dataset_uri))
                 self._g.add((slice_iri, rdf_type, slice))
@@ -486,8 +489,31 @@ class Transformer(object):
         return self._ns_dict
 
     def _data_element_type(self, row):
-    # Try to guess the type from data element description.
-        pass
+        # Get the data type uri from data element description.
+        field_type = row.get(FIELD_TYPE)
+        text_type = row.get(TEXT_TYPE)
+        if field_type == 'text' and text_type == 'number':
+            result = self.ns.get('xsd')['float']
+        elif field_type == 'text' and text_type == 'integer':
+            result = self.ns.get('xsd')['integer']
+        elif field_type == 'radio' or field_type == 'dropdown':
+            result = self._get_class_from_field_name(row.get(FIELD_NAME))
+        elif text_type == 'calc':
+            result = self.ns.get('xsd')['float']
+        else:
+            result = self.ns.get('xsd')['string']
+        return result
+
+    def _get_sha1_iri(self, row):
+        # Get iri using based using sha1 of row.
+        sha1 = hashlib.sha1(str(row)).hexdigest()
+        return self.ns.get('iri')[sha1]
+
+    def _get_class_from_field_name(self, field_name):
+        # Create a skos:Concept Class.
+        class_label = ''.join([i.capitalize()
+                               for i in field_name.split('_')])
+        return self.ns.get('ncanda')[class_label]
 
     def _build_config_lookup(self, config):
         if config is None:
