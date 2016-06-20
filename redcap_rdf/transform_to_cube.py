@@ -424,6 +424,7 @@ class Transformer(object):
                 self._g.add((slice_iri,
                              self.terms.rdf_type,
                              self.terms.slice_type))
+                self._g.add((dataset_uri, self.terms.slice, slice_iri))
                 self._g.add((slice_iri, self.terms.slice_structure, dd))
                 for key, vals in self._config_dict.iteritems():
                     field_name = vals[FIELD_NAME]
@@ -438,13 +439,18 @@ class Transformer(object):
                         # object property), set to xsd:anyURI.
                         xsd = str(XSD[''].defrag())
                         if str(rdfs_range_iri.defrag()) != xsd:
-                            rdfs_range_iri = XSD['anyURI']
-                        # TODO: Use concept from code list instead of a Literal
-                        # for coded values.
-                        self._g.add((obs,
-                                     field_name_iri,
-                                     Literal(row[key],
-                                             datatype=rdfs_range_iri)))
+                            datatype_iri = XSD['anyURI']
+                            coded_iri = self._convert_literal_to_coded_iri(
+                                rdfs_range_iri, row[key])
+                            self._g.add((obs,
+                                         field_name_iri,
+                                         coded_iri))
+                        else:
+                            datatype_iri = rdfs_range_iri
+                            self._g.add((obs,
+                                         field_name_iri,
+                                         Literal(row[key],
+                                                 datatype=datatype_iri)))
                         self._g.add((slice_iri, self.terms.observation, obs))
                     else:
                         # Add slice indices.
@@ -461,6 +467,19 @@ class Transformer(object):
 
         """
         print(self._g.serialize(format='turtle'))
+
+    def _convert_literal_to_coded_iri(self, rdfs_range_iri, literal):
+        # Given a range and coded literal, returns a iri representing the
+        # literal
+        coded_iris = list(self._g.subjects(self.terms.rdf_type,
+                                           rdfs_range_iri))
+        result = URIRef('')
+        for coded_iri in coded_iris:
+            notations = list(self._g.objects(coded_iri, self.terms.notation))
+            notation = notations[0]
+            if literal == str(notation):
+                result = coded_iri
+        return result
 
     def _add_prefix(self, prefix, namespace):
         ns = Namespace(namespace)
@@ -543,6 +562,7 @@ class Transformer(object):
             order=self.ns.get("qb")["order"],
             measure=self.ns.get("qb")["measure"],
             slice_key=self.ns.get("qb")["sliceKey"],
+            slice=self.ns.get("qb")["slice"],
             component_property=self.ns.get("qb")["componentProperty"],
             concept=self.ns.get("qb")["concept"],
 
