@@ -226,9 +226,6 @@ class Transformer(object):
                         self._g.add((concept_scheme_uri,
                                      self.terms.has_top_concept,
                                      choice_uri))
-                        self._g.add((concept_scheme_uri,
-                                     self.terms.in_scheme,
-                                     choice_uri))
 
     def add_metadata(self, metadata_path):
         """Adds the dataset metadata to the graph

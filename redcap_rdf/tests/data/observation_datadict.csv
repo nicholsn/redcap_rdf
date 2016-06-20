@@ -1,7 +1,7 @@
 Variable / Field Name,Form Name,Section Header,Field Type,Field Label,"Choices, Calculations, OR Slider Labels",Field Note,Text Validation Type OR Show Slider Number,Text Validation Min,Text Validation Max,Identifier?,Branching Logic (Show field only if...),Required Field?,Custom Alignment,Question Number (surveys only),Matrix Group Name,Matrix Ranking?
 subject,observation,,text,Subject Identifier,,,,,,,,,,,,
-arm,observation,,dropdown,Study Arm,"0, standard",,,,,,,,,,,
-visit,observation,,dropdown,Study Visit,"0, baseline | 1, followup_1y",,,,,,,,,,,
+arm,observation,,dropdown,Study Arm,"standard, standard",,,,,,,,,,,
+visit,observation,,dropdown,Study Visit,"baseline, baseline | followup_1y, followup_1y",,,,,,,,,,,
 site,observation,,dropdown,Study Site,"A, A | B, B | C, C",,,,,,,,,,,
 sex,observation,,dropdown,Gender,"F, Female | M, Male",,,,,,,,,,,
 visit_age,observation,,text,Visit Age,,,number,10,25,,,,,,,
