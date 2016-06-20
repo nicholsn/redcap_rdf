@@ -439,7 +439,6 @@ class Transformer(object):
                         # object property), set to xsd:anyURI.
                         xsd = str(XSD[''].defrag())
                         if str(rdfs_range_iri.defrag()) != xsd:
-                            datatype_iri = XSD['anyURI']
                             coded_iri = self._convert_literal_to_coded_iri(
                                 rdfs_range_iri, row[key])
                             self._g.add((obs,
