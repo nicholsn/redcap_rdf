@@ -1,8 +1,8 @@
 Variable / Field Name,dimension,concept,range,units,statistic,categories
-subject,y,http://sibis.sri.com/terms#Subject,,,http://purl.obolibrary.org/obo/STATO_0000578,
-arm,y,http://sibis.sri.com/terms#Arm,,,http://purl.obolibrary.org/obo/STATO_0000252, http://sibis.sri.com/terms#StandardArm
-visit,y,http://sibis.sri.com/terms#Visit,,,http://purl.obolibrary.org/obo/STATO_0000252, http://sibis.sri.com/terms#Standard|http://sibis.sri.com/terms#FollowupYear1
-site,,http://sibis.sri.com/terms#Site,,,http://purl.obolibrary.org/obo/STATO_0000252, http://sibis.sri.com/terms#SiteA|http://sibis.sri.com/terms#SiteB
-sex,,http://sibis.sri.com/terms#Sex,,,http://purl.obolibrary.org/obo/STATO_0000252, http://sibis.sri.com/terms#Male|http://sibis.sri.com/terms#Female
-visit_age,,http://sibis.sri.com/terms#VisitAge,,,http://purl.obolibrary.org/obo/IAO_0000122,
-race,,http://sibis.sri.com/terms#Race,,,http://purl.obolibrary.org/obo/STATO_0000252,http://sibis.sri.com/terms#AftricanAmerican|http://sibis.sri.com/terms#Asian|http://sibis.sri.com/terms#Caucasian
+subject,y,http://ncanda.sri.com/terms#Subject,,,http://purl.obolibrary.org/obo/STATO_0000578,
+arm,y,http://ncanda.sri.com/terms#Arm,,,http://purl.obolibrary.org/obo/STATO_0000252, http://ncanda.sri.com/terms#StandardArm
+visit,y,http://ncanda.sri.com/terms#Visit,,,http://purl.obolibrary.org/obo/STATO_0000252, http://ncanda.sri.com/terms#Standard|http://ncanda.sri.com/terms#FollowupYear1
+site,,http://ncanda.sri.com/terms#Site,,,http://purl.obolibrary.org/obo/STATO_0000252, http://ncanda.sri.com/terms#SiteA|http://ncanda.sri.com/terms#SiteB
+sex,,http://ncanda.sri.com/terms#Sex,,,http://purl.obolibrary.org/obo/STATO_0000252, http://ncanda.sri.com/terms#Male|http://ncanda.sri.com/terms#Female
+visit_age,,http://ncanda.sri.com/terms#VisitAge,,,http://purl.obolibrary.org/obo/IAO_0000122,
+race,,http://ncanda.sri.com/terms#Race,,,http://purl.obolibrary.org/obo/STATO_0000252,http://ncanda.sri.com/terms#AftricanAmerican|http://ncanda.sri.com/terms#Asian|http://ncanda.sri.com/terms#Caucasian

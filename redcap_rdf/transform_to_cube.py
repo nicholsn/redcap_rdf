@@ -140,6 +140,9 @@ class Transformer(object):
                         DIMENSION in self._config_dict[field_name]):
                     if self._config_dict[field_name][DIMENSION] == "y":
                         prop = self.terms.dimension_property_type
+                        self._g.add((node,
+                                     self.terms.rdf_type,
+                                     self.terms.coded_property_type))
                 self._g.add((node, self.terms.rdf_type, prop))
                 self._g.add((node,
                              self.terms.rdf_type,
@@ -185,7 +188,7 @@ class Transformer(object):
                                  Literal(title.format(
                                      field_label))))
                     # Create a skos:ConceptScheme.
-                    scheme_label = "{}_concept_scheme".format(field_name)
+                    scheme_label = "{}-concept-scheme".format(field_name)
                     concept_scheme_uri = self.ns.get("ncanda")[scheme_label]
                     self._g.add((concept_scheme_uri,
                                  self.terms.rdf_type,
@@ -199,6 +202,10 @@ class Transformer(object):
                                      field_label))))
                     self._g.add((class_uri,
                                  self.terms.rdfs_see_also,
+                                 concept_scheme_uri))
+                    # Annotate with code list
+                    self._g.add((node,
+                                 self.terms.code_list,
                                  concept_scheme_uri))
                     choices = row[CHOICES].split("|")
                     # Create skos:Concept for each code.
@@ -546,6 +553,7 @@ class Transformer(object):
             slice_key_type=self.ns.get("qb")["SliceKey"],
             dimension_property_type=self.ns.get("qb")["DimensionProperty"],
             measure_property_type=self.ns.get("qb")["MeasureProperty"],
+            coded_property_type=self.ns.get("qb")["CodedProperty"],
 
             # Data cube properties.
             slice_structure=self.ns.get("qb")["sliceStructure"],
@@ -563,6 +571,7 @@ class Transformer(object):
             slice=self.ns.get("qb")["slice"],
             component_property=self.ns.get("qb")["componentProperty"],
             concept=self.ns.get("qb")["concept"],
+            code_list=self.ns.get("qb")["codeList"],
 
             # DC Terms properties.
             title=self.ns.get("dct")["title"],
