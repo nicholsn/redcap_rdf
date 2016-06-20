@@ -429,14 +429,14 @@ class Transformer(object):
                 for key, vals in self._config_dict.iteritems():
                     field_name = vals[FIELD_NAME]
                     field_name_iri = self.ns.get("ncanda")[field_name]
+                    # Get the rdfs:range to determine datatype.
+                    rdfs_ranges = list(self._g.objects(
+                        field_name_iri, self.terms.rdfs_range))
+                    rdfs_range_iri = rdfs_ranges[0]
                     # Only include the first dimension at the observation level.
                     if field_name not in self._dimensions[1:]:
-                        # Get the rdfs:range to determine datatype.
-                        rdfs_ranges = list(self._g.objects(
-                            field_name_iri, self.terms.rdfs_range))
-                        rdfs_range_iri = rdfs_ranges[0]
                         # If the range is not an XSD Literal (i.e., this is an
-                        # object property), set to xsd:anyURI.
+                        # object property), use coded iri
                         xsd = str(XSD[''].defrag())
                         if str(rdfs_range_iri.defrag()) != xsd:
                             coded_iri = self._convert_literal_to_coded_iri(
@@ -453,9 +453,11 @@ class Transformer(object):
                         self._g.add((slice_iri, self.terms.observation, obs))
                     else:
                         # Add slice indices.
+                        coded_iri = self._convert_literal_to_coded_iri(
+                            rdfs_range_iri, row[key])
                         self._g.add((slice_iri,
                                      field_name_iri,
-                                     Literal(row[key])))
+                                     coded_iri))
                 index += 1
 
     def display_graph(self):
