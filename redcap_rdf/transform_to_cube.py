@@ -197,7 +197,11 @@ class Transformer(object):
         # Check that dimensions were passed.
         if dimensions_csv:
             self._dimensions = dimensions_csv.split(",")
+        # Create the slice key iri.
         slice_by_iri = self._get_slice_by_iri()
+        self._g.add((slice_by_iri,
+                     self.terms.rdf_type,
+                     self.terms.slice_key_type))
         for dim in self._dimensions:
             blank = BNode()
             self._g.add((dd_iri, self.terms.component, blank))
@@ -233,9 +237,6 @@ class Transformer(object):
                     self._g.add((slice_by_iri,
                                  self.terms.component_property,
                                  dim))
-                    self._g.add((slice_by_iri,
-                                 self.terms.rdf_type,
-                                 self.terms.slice_key_type))
             index += 1
 
         # Add measures.
@@ -299,8 +300,9 @@ class Transformer(object):
                 if rdfs_ranges:
                     rdfs_range_iri = rdfs_ranges[0]
                 else:
-                    log("Observations added before dsd.")
-                    raise(KeyError("Observations added before dsd."))
+                    error = "rdfs:range not set for {}.".format(field_name_iri)
+                    log(error)
+                    raise(KeyError(error))
                 # Only include the first dimension at the observation level.
                 if field_name not in self._dimensions[1:]:
                     # If the range is not an XSD Literal (i.e., this is an
