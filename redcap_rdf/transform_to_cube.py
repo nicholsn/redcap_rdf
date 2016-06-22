@@ -110,7 +110,7 @@ class Transformer(object):
         """
         log("Processing: {}".format(dd))
 
-        self._build_config_lookup(mapping)
+        #self._build_config_lookup(mapping)
 
         self._build_datadict(dd)
 
@@ -512,51 +512,27 @@ class Transformer(object):
             field_label = row[FIELD_LABEL]
             self._fields.append(field_name)
             subject_iri = self.ns.get(PROJECT)[field_name]
-            # Default to MeasureProperty.
-            prop = self.terms.measure_property_type
-            # Use field_name to create "Field Name" label.
-            if field_label:
-                label = field_label
-            else:
-                split = [i.capitalize() for i in field_label.split('_')]
-                label = ' '.join(split)
-            self._g.add((subject_iri, self.terms.rdfs_label, Literal(label)))
-            # Set prop for dimension properties.
-            if (field_name in self._config_dict and
-                        DIMENSION in self._config_dict[field_name]):
-                if self._config_dict[field_name][DIMENSION] == "y":
-                    prop = self.terms.dimension_property_type
-                    self._g.add((subject_iri,
-                                 self.terms.rdf_type,
-                                 self.terms.coded_property_type))
-            self._g.add((subject_iri, self.terms.rdf_type, prop))
+            # Set predicate type to qb:MeasureProperty and rdf:Property.
+            self._g.add((subject_iri,
+                         self.terms.rdf_type,
+                         self.terms.measure_property_type))
             self._g.add((subject_iri,
                          self.terms.rdf_type,
                          self.terms.property_type))
-            # Annotate with Concepts.
-            if (field_name in self._config_dict and
-                        CONCEPT in self._config_dict[field_name]):
-                obj = URIRef(self._config_dict[field_name][CONCEPT])
-                self._g.add((subject_iri, self.terms.concept, obj))
-            # Annotate with Range.
-            if (field_name in self._config_dict and
-                        RANGE in self._config_dict[field_name]):
-                xsd_type = URIRef(self._config_dict[field_name][RANGE])
+            # Set predicate rdfs:label.
+            if field_label:
+                label = field_label
             else:
-                xsd_type = self._data_element_type(row)
+                split = [i.capitalize() for i in field_name.split('_')]
+                label = ' '.join(split)
+            self._g.add((subject_iri, self.terms.rdfs_label, Literal(label)))
+            # Generate a skow:Concept in project namespace.
+            concept_type = self._get_class_from_field_name(field_name)
+            self._g.add((subject_iri, self.terms.concept, concept_type))
+            # Annotate with Range.
+            xsd_type = self._data_element_type(row)
             self._g.add((subject_iri, self.terms.rdfs_range, xsd_type))
-            # Annotate with Units.
-            if (field_name in self._config_dict and
-                        UNITS in self._config_dict[field_name]):
-                obj = URIRef(self._config_dict[field_name][UNITS])
-                self._g.add((subject_iri, self.terms.unit_measure, obj))
-            # Annotate with Statistic.
-            if (field_name in self._config_dict and
-                        STATISTIC in self._config_dict[field_name]):
-                obj = URIRef(self._config_dict[field_name][STATISTIC])
-                self._g.add((subject_iri, self.terms.statistic, obj))
-            if (field_name in self._config_dict and
-                    row[CHOICES]):
+            if row[CHOICES]:
                 # Create a skos:Concept Class.
                 class_label = ''.join([i.capitalize()
                                        for i in field_name.split('_')])
@@ -625,3 +601,12 @@ class Transformer(object):
             # drop empty values
             res = dict((k, v) for k, v in row.iteritems() if v is not "")
             self._config_dict[row[FIELD_NAME]] = res
+
+    def _add_dimension_type(self, subject_iri):
+        # Set types for dimension properties.
+        self._g.add((subject_iri,
+                     self.terms.rdf_type,
+                     self.terms.dimension_property_type))
+        self._g.add((subject_iri,
+                     self.terms.rdf_type,
+                     self.terms.coded_property_type))
