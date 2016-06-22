@@ -1,8 +1,7 @@
 """ Utility functions for the REDCap Data Tools.
-
-@author: Victor Meyerson
 """
-
+import os
+import csv
 import sys
 
 
@@ -30,3 +29,23 @@ class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
+
+
+def get_dict_reader(csv_file):
+    """Read a csv file as a dictionary.
+
+    Args:
+        csv_file (str): Path to a csv file.
+
+    Returns:
+        An instance of csv.DictReader.
+    """
+    if not csv_file:
+        log("File not provided.")
+        return
+
+    if not os.path.isfile(csv_file):
+        log("{} file not found".format(csv_file))
+        return
+    with open(csv_file) as fi:
+        return list(csv.DictReader(fi))

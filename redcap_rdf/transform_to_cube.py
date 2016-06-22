@@ -11,7 +11,7 @@ import hashlib
 from rdflib import BNode, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, OWL, SKOS, VOID, XSD
 
-from redcap_rdf.util import log, AttrDict
+from redcap_rdf.util import log, AttrDict, get_dict_reader
 
 # Header columns for data dictionary
 FIELD_NAME = "Variable / Field Name"
@@ -505,140 +505,123 @@ class Transformer(object):
         return self.ns.get(PROJECT)[class_label]
 
     def _build_datadict(self, dd):
-        if dd is None:
-            log("Data dictionary file not provided")
-            return
-
-        if not os.path.isfile(dd):
-            log("{} file not found".format(dd))
-            return
         self._datadict = os.path.basename(dd)
-        with open(dd) as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                field_name = row[FIELD_NAME]
-                field_label = row[FIELD_LABEL]
-                self._fields.append(field_name)
-                node = self.ns.get(PROJECT)[field_name]
-                # Default to MeasureProperty.
-                prop = self.terms.measure_property_type
-                # Use field_name to create "Field Name" label.
-                if field_label:
-                    label = field_label
-                else:
-                    split = [i.capitalize() for i in field_label.split('_')]
-                    label = ' '.join(split)
-                self._g.add((node, self.terms.rdfs_label, Literal(label)))
-                # Set prop for dimension properties.
-                if (field_name in self._config_dict and
-                            DIMENSION in self._config_dict[field_name]):
-                    if self._config_dict[field_name][DIMENSION] == "y":
-                        prop = self.terms.dimension_property_type
-                        self._g.add((node,
-                                     self.terms.rdf_type,
-                                     self.terms.coded_property_type))
-                self._g.add((node, self.terms.rdf_type, prop))
-                self._g.add((node,
-                             self.terms.rdf_type,
-                             self.terms.property_type))
-                # Annotate with Concepts.
-                if (field_name in self._config_dict and
-                            CONCEPT in self._config_dict[field_name]):
-                    obj = URIRef(self._config_dict[field_name][CONCEPT])
-                    self._g.add((node, self.terms.concept, obj))
-                # Annotate with Range.
-                if (field_name in self._config_dict and
-                            RANGE in self._config_dict[field_name]):
-                    xsd_type = URIRef(self._config_dict[field_name][RANGE])
-                else:
-                    xsd_type = self._data_element_type(row)
-                self._g.add((node, self.terms.rdfs_range, xsd_type))
-                # Annotate with Units.
-                if (field_name in self._config_dict and
-                            UNITS in self._config_dict[field_name]):
-                    obj = URIRef(self._config_dict[field_name][UNITS])
-                    self._g.add((node, self.terms.unit_measure, obj))
-                # Annotate with Statistic.
-                if (field_name in self._config_dict and
-                            STATISTIC in self._config_dict[field_name]):
-                    obj = URIRef(self._config_dict[field_name][STATISTIC])
-                    self._g.add((node, self.terms.statistic, obj))
-                if (field_name in self._config_dict and
-                        row[CHOICES]):
-                    # Create a skos:Concept Class.
-                    class_label = ''.join([i.capitalize()
-                                           for i in field_name.split('_')])
-                    class_uri = self.ns.get(PROJECT)[class_label]
-                    self._g.add((class_uri,
-                                 self.terms.rdf_type,
-                                 self.terms.owl_class))
-                    self._g.add((class_uri,
-                                 self.terms.rdfs_subclass_of,
-                                 self.terms.concept_type))
-                    title = "Code List Class for '{}' term."
-                    self._g.add((class_uri,
-                                 self.terms.rdfs_label,
-                                 Literal(title.format(
-                                     field_label))))
-                    # Create a skos:ConceptScheme.
-                    scheme_label = "{}-concept-scheme".format(field_name)
-                    concept_scheme_uri = self.ns.get(PROJECT)[scheme_label]
-                    self._g.add((concept_scheme_uri,
-                                 self.terms.rdf_type,
-                                 self.terms.concept_scheme_type))
-                    self._g.add((concept_scheme_uri,
-                                 self.terms.notation,
-                                 Literal(field_name)))
-                    self._g.add((concept_scheme_uri,
-                                 self.terms.rdfs_label,
-                                 Literal("Code List for '{}' term.".format(
-                                     field_label))))
-                    self._g.add((class_uri,
-                                 self.terms.rdfs_see_also,
-                                 concept_scheme_uri))
-                    # Annotate with code list
+        reader = get_dict_reader(dd)
+        for row in reader:
+            field_name = row[FIELD_NAME]
+            field_label = row[FIELD_LABEL]
+            self._fields.append(field_name)
+            node = self.ns.get(PROJECT)[field_name]
+            # Default to MeasureProperty.
+            prop = self.terms.measure_property_type
+            # Use field_name to create "Field Name" label.
+            if field_label:
+                label = field_label
+            else:
+                split = [i.capitalize() for i in field_label.split('_')]
+                label = ' '.join(split)
+            self._g.add((node, self.terms.rdfs_label, Literal(label)))
+            # Set prop for dimension properties.
+            if (field_name in self._config_dict and
+                        DIMENSION in self._config_dict[field_name]):
+                if self._config_dict[field_name][DIMENSION] == "y":
+                    prop = self.terms.dimension_property_type
                     self._g.add((node,
-                                 self.terms.code_list,
+                                 self.terms.rdf_type,
+                                 self.terms.coded_property_type))
+            self._g.add((node, self.terms.rdf_type, prop))
+            self._g.add((node,
+                         self.terms.rdf_type,
+                         self.terms.property_type))
+            # Annotate with Concepts.
+            if (field_name in self._config_dict and
+                        CONCEPT in self._config_dict[field_name]):
+                obj = URIRef(self._config_dict[field_name][CONCEPT])
+                self._g.add((node, self.terms.concept, obj))
+            # Annotate with Range.
+            if (field_name in self._config_dict and
+                        RANGE in self._config_dict[field_name]):
+                xsd_type = URIRef(self._config_dict[field_name][RANGE])
+            else:
+                xsd_type = self._data_element_type(row)
+            self._g.add((node, self.terms.rdfs_range, xsd_type))
+            # Annotate with Units.
+            if (field_name in self._config_dict and
+                        UNITS in self._config_dict[field_name]):
+                obj = URIRef(self._config_dict[field_name][UNITS])
+                self._g.add((node, self.terms.unit_measure, obj))
+            # Annotate with Statistic.
+            if (field_name in self._config_dict and
+                        STATISTIC in self._config_dict[field_name]):
+                obj = URIRef(self._config_dict[field_name][STATISTIC])
+                self._g.add((node, self.terms.statistic, obj))
+            if (field_name in self._config_dict and
+                    row[CHOICES]):
+                # Create a skos:Concept Class.
+                class_label = ''.join([i.capitalize()
+                                       for i in field_name.split('_')])
+                class_uri = self.ns.get(PROJECT)[class_label]
+                self._g.add((class_uri,
+                             self.terms.rdf_type,
+                             self.terms.owl_class))
+                self._g.add((class_uri,
+                             self.terms.rdfs_subclass_of,
+                             self.terms.concept_type))
+                title = "Code List Class for '{}' term."
+                self._g.add((class_uri,
+                             self.terms.rdfs_label,
+                             Literal(title.format(
+                                 field_label))))
+                # Create a skos:ConceptScheme.
+                scheme_label = "{}-concept-scheme".format(field_name)
+                concept_scheme_uri = self.ns.get(PROJECT)[scheme_label]
+                self._g.add((concept_scheme_uri,
+                             self.terms.rdf_type,
+                             self.terms.concept_scheme_type))
+                self._g.add((concept_scheme_uri,
+                             self.terms.notation,
+                             Literal(field_name)))
+                self._g.add((concept_scheme_uri,
+                             self.terms.rdfs_label,
+                             Literal("Code List for '{}' term.".format(
+                                 field_label))))
+                self._g.add((class_uri,
+                             self.terms.rdfs_see_also,
+                             concept_scheme_uri))
+                # Annotate with code list
+                self._g.add((node,
+                             self.terms.code_list,
+                             concept_scheme_uri))
+                choices = row[CHOICES].split("|")
+                # Create skos:Concept for each code.
+                for choice in choices:
+                    k, v = choice.split(',')
+                    code = k.strip()
+                    code_label = v.strip()
+                    choice_uri = self.ns.get(PROJECT)['-'.join(
+                        [field_name, code])]
+                    self._g.add((choice_uri,
+                                 self.terms.rdf_type,
+                                 self.terms.concept_type))
+                    self._g.add((choice_uri,
+                                 self.terms.rdf_type,
+                                 class_uri))
+                    self._g.add((choice_uri,
+                                 self.terms.notation,
+                                 Literal(code)))
+                    self._g.add((choice_uri,
+                                 self.terms.top_concept_of,
                                  concept_scheme_uri))
-                    choices = row[CHOICES].split("|")
-                    # Create skos:Concept for each code.
-                    for choice in choices:
-                        k, v = choice.split(',')
-                        code = k.strip()
-                        code_label = v.strip()
-                        choice_uri = self.ns.get(PROJECT)['-'.join(
-                            [field_name, code])]
-                        self._g.add((choice_uri,
-                                     self.terms.rdf_type,
-                                     self.terms.concept_type))
-                        self._g.add((choice_uri,
-                                     self.terms.rdf_type,
-                                     class_uri))
-                        self._g.add((choice_uri,
-                                     self.terms.notation,
-                                     Literal(code)))
-                        self._g.add((choice_uri,
-                                     self.terms.top_concept_of,
-                                     concept_scheme_uri))
-                        self._g.add((choice_uri,
-                                     self.terms.pref_label,
-                                     Literal(code_label)))
-                        self._g.add((concept_scheme_uri,
-                                     self.terms.has_top_concept,
-                                     choice_uri))
+                    self._g.add((choice_uri,
+                                 self.terms.pref_label,
+                                 Literal(code_label)))
+                    self._g.add((concept_scheme_uri,
+                                 self.terms.has_top_concept,
+                                 choice_uri))
 
     def _build_config_lookup(self, config):
-        if config is None:
-            log("Mapping file not provided")
-            return
-
-        if not os.path.isfile(config):
-            log("{} file not found".format(config))
-            return
-
-        with open(config) as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                # drop empty values
-                res = dict((k, v) for k, v in row.iteritems() if v is not "")
-                self._config_dict[row[FIELD_NAME]] = res
+        reader = get_dict_reader(config)
+        for row in reader:
+            # drop empty values
+            res = dict((k, v) for k, v in row.iteritems() if v is not "")
+            self._config_dict[row[FIELD_NAME]] = res
