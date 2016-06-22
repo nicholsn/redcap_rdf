@@ -277,72 +277,62 @@ class Transformer(object):
             None
 
         """
-        if not os.path.isfile(observations):
-            print("{} file not found".format(observations))
-            return
         log("Processing: {}".format(observations))
 
-        # constants
+        # Constants.
         if self._datadict:
-            dd = self.ns.get('sibis')[self._datadict]
+            dd = self.ns.get(PROJECT)[self._datadict]
         else:
             dd = URIRef(self._datadict)
-        dataset_uriref = list(self._g.subjects(self.terms.rdf_type,
-                                               self.terms.dataset_type))
-        if dataset_uriref:
-            dataset_uri = dataset_uriref[0]
-        else:
-            dataset_uri = URIRef("")
-
-        with open(observations) as f:
-            reader = csv.DictReader(f)
-            index = 0
-            for row in reader:
-                obs = self._get_sha1_iri(row)
-                slice_vals = [row.get(i) for i in self._dimensions[1:]]
-                slice_iri = self._get_sha1_iri(slice_vals)
-                self._g.add((obs,
-                             self.terms.rdf_type,
-                             self.terms.observation_type))
-                self._g.add((obs, self.terms.dataset, dataset_uri))
-                self._g.add((slice_iri,
-                             self.terms.rdf_type,
-                             self.terms.slice_type))
-                self._g.add((dataset_uri, self.terms.slice, slice_iri))
-                self._g.add((slice_iri, self.terms.slice_structure, dd))
-                for key, vals in self._config_dict.iteritems():
-                    field_name = vals[FIELD_NAME]
-                    field_name_iri = self.ns.get(PROJECT)[field_name]
-                    # Get the rdfs:range to determine datatype.
-                    rdfs_ranges = list(self._g.objects(
-                        field_name_iri, self.terms.rdfs_range))
-                    rdfs_range_iri = rdfs_ranges[0]
-                    # Only include the first dimension at the observation level.
-                    if field_name not in self._dimensions[1:]:
-                        # If the range is not an XSD Literal (i.e., this is an
-                        # object property), use coded iri
-                        xsd = str(XSD[''].defrag())
-                        if str(rdfs_range_iri.defrag()) != xsd:
-                            coded_iri = self._convert_literal_to_coded_iri(
-                                rdfs_range_iri, row[key])
-                            self._g.add((obs,
-                                         field_name_iri,
-                                         coded_iri))
-                        else:
-                            datatype_iri = rdfs_range_iri
-                            self._g.add((obs,
-                                         field_name_iri,
-                                         Literal(row[key],
-                                                 datatype=datatype_iri)))
-                        self._g.add((slice_iri, self.terms.observation, obs))
-                    else:
-                        # Add slice indices.
+        dataset_iri = self._get_dataset_iri()
+        reader = get_dict_reader(observations)
+        index = 0
+        for row in reader:
+            obs = self._get_sha1_iri(row)
+            slice_vals = [row.get(i) for i in self._dimensions[1:]]
+            slice_iri = self._get_sha1_iri(slice_vals)
+            self._g.add((obs,
+                         self.terms.rdf_type,
+                         self.terms.observation_type))
+            self._g.add((obs, self.terms.dataset, dataset_iri))
+            self._g.add((slice_iri,
+                         self.terms.rdf_type,
+                         self.terms.slice_type))
+            self._g.add((dataset_iri, self.terms.slice, slice_iri))
+            self._g.add((slice_iri, self.terms.slice_structure, dd))
+            for key, vals in self._config_dict.iteritems():
+                field_name = vals[FIELD_NAME]
+                field_name_iri = self.ns.get(PROJECT)[field_name]
+                # Get the rdfs:range to determine datatype.
+                rdfs_ranges = list(self._g.objects(
+                    field_name_iri, self.terms.rdfs_range))
+                rdfs_range_iri = rdfs_ranges[0]
+                # Only include the first dimension at the observation level.
+                if field_name not in self._dimensions[1:]:
+                    # If the range is not an XSD Literal (i.e., this is an
+                    # object property), use coded iri
+                    xsd = str(XSD[''].defrag())
+                    if str(rdfs_range_iri.defrag()) != xsd:
                         coded_iri = self._convert_literal_to_coded_iri(
                             rdfs_range_iri, row[key])
-                        self._g.add((slice_iri,
+                        self._g.add((obs,
                                      field_name_iri,
                                      coded_iri))
-                index += 1
+                    else:
+                        datatype_iri = rdfs_range_iri
+                        self._g.add((obs,
+                                     field_name_iri,
+                                     Literal(row[key],
+                                             datatype=datatype_iri)))
+                    self._g.add((slice_iri, self.terms.observation, obs))
+                else:
+                    # Add slice indices.
+                    coded_iri = self._convert_literal_to_coded_iri(
+                        rdfs_range_iri, row[key])
+                    self._g.add((slice_iri,
+                                 field_name_iri,
+                                 coded_iri))
+            index += 1
 
     def display_graph(self):
         """Print the RDF file to stdout in turtle format.
@@ -610,3 +600,13 @@ class Transformer(object):
         self._g.add((subject_iri,
                      self.terms.rdf_type,
                      self.terms.coded_property_type))
+
+    def _get_dataset_iri(self):
+        # Get an IRI for the dataset
+        dataset_uriref = list(self._g.subjects(self.terms.rdf_type,
+                                               self.terms.dataset_type))
+        if dataset_uriref:
+            dataset_iri = dataset_uriref[0]
+        else:
+            dataset_iri = URIRef("")
+        return dataset_iri
