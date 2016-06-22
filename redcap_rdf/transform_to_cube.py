@@ -511,7 +511,7 @@ class Transformer(object):
             field_name = row[FIELD_NAME]
             field_label = row[FIELD_LABEL]
             self._fields.append(field_name)
-            node = self.ns.get(PROJECT)[field_name]
+            subject_iri = self.ns.get(PROJECT)[field_name]
             # Default to MeasureProperty.
             prop = self.terms.measure_property_type
             # Use field_name to create "Field Name" label.
@@ -520,41 +520,41 @@ class Transformer(object):
             else:
                 split = [i.capitalize() for i in field_label.split('_')]
                 label = ' '.join(split)
-            self._g.add((node, self.terms.rdfs_label, Literal(label)))
+            self._g.add((subject_iri, self.terms.rdfs_label, Literal(label)))
             # Set prop for dimension properties.
             if (field_name in self._config_dict and
                         DIMENSION in self._config_dict[field_name]):
                 if self._config_dict[field_name][DIMENSION] == "y":
                     prop = self.terms.dimension_property_type
-                    self._g.add((node,
+                    self._g.add((subject_iri,
                                  self.terms.rdf_type,
                                  self.terms.coded_property_type))
-            self._g.add((node, self.terms.rdf_type, prop))
-            self._g.add((node,
+            self._g.add((subject_iri, self.terms.rdf_type, prop))
+            self._g.add((subject_iri,
                          self.terms.rdf_type,
                          self.terms.property_type))
             # Annotate with Concepts.
             if (field_name in self._config_dict and
                         CONCEPT in self._config_dict[field_name]):
                 obj = URIRef(self._config_dict[field_name][CONCEPT])
-                self._g.add((node, self.terms.concept, obj))
+                self._g.add((subject_iri, self.terms.concept, obj))
             # Annotate with Range.
             if (field_name in self._config_dict and
                         RANGE in self._config_dict[field_name]):
                 xsd_type = URIRef(self._config_dict[field_name][RANGE])
             else:
                 xsd_type = self._data_element_type(row)
-            self._g.add((node, self.terms.rdfs_range, xsd_type))
+            self._g.add((subject_iri, self.terms.rdfs_range, xsd_type))
             # Annotate with Units.
             if (field_name in self._config_dict and
                         UNITS in self._config_dict[field_name]):
                 obj = URIRef(self._config_dict[field_name][UNITS])
-                self._g.add((node, self.terms.unit_measure, obj))
+                self._g.add((subject_iri, self.terms.unit_measure, obj))
             # Annotate with Statistic.
             if (field_name in self._config_dict and
                         STATISTIC in self._config_dict[field_name]):
                 obj = URIRef(self._config_dict[field_name][STATISTIC])
-                self._g.add((node, self.terms.statistic, obj))
+                self._g.add((subject_iri, self.terms.statistic, obj))
             if (field_name in self._config_dict and
                     row[CHOICES]):
                 # Create a skos:Concept Class.
@@ -589,7 +589,7 @@ class Transformer(object):
                              self.terms.rdfs_see_also,
                              concept_scheme_uri))
                 # Annotate with code list
-                self._g.add((node,
+                self._g.add((subject_iri,
                              self.terms.code_list,
                              concept_scheme_uri))
                 choices = row[CHOICES].split("|")
