@@ -53,10 +53,9 @@ def test_add_dsd():
 
 def test_add_observations():
     transformer = Transformer()
-    transformer.add_observations(observation)
-    subjects = [i.n3() for i in transformer._g.subjects()]
-    iri = "<http://sibis.sri.com/iri/0251ee3ec64386df9864ff27219610488c61792a>"
-    assert iri in subjects
+    with pytest.raises(KeyError):
+        transformer.add_observations(observation)
+        transformer.add_observations(observation)
 
 
 def test_ic1():

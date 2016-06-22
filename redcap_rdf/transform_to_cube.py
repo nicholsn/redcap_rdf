@@ -49,6 +49,7 @@ COMMENT_LANG = "comment_lang"
 
 # Project specific configuration.
 PROJECT = 'ncanda'
+LANG = 'en'
 
 
 class Transformer(object):
@@ -110,7 +111,7 @@ class Transformer(object):
         """
         log("Processing: {}".format(dd))
 
-        #self._build_config_lookup(mapping)
+        # self._build_config_lookup(mapping)
 
         self._build_datadict(dd)
 
@@ -178,75 +179,63 @@ class Transformer(object):
 
         """
         if self._datadict:
-            dd = self.ns.get(PROJECT)[self._datadict]
+            dd_iri = self.ns.get(PROJECT)[self._datadict]
         else:
-            dd = URIRef(self._datadict)
+            dd_iri = URIRef(self._datadict)
 
-        # read slices file
-        slices_map = {}
-        if os.path.isfile(slices):
-            with open(slices) as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    slicename = row[SLICE]
-                    slices_map[slicename] = row
-
-        node = (dd, self.terms.rdf_type, self.terms.dsd_type)
+        node = (dd_iri, self.terms.rdf_type, self.terms.dsd_type)
         self._g.add(node)
 
         # Link to dataset.
         dataset_uri = list(self._g.subjects(self.terms.rdf_type,
                                             self.terms.dataset_type))
         if dataset_uri:
-            self._g.add((dataset_uri[0], self.terms.structure, dd))
+            self._g.add((dataset_uri[0], self.terms.structure, dd_iri))
 
         # Add dimension.
         index = 1
         # Check that dimensions were passed.
         if dimensions_csv:
             self._dimensions = dimensions_csv.split(",")
-        slicename = ""
+        slice_by_iri = self._get_slice_by_iri()
         for dim in self._dimensions:
             blank = BNode()
-            self._g.add((dd, self.terms.component, blank))
+            self._g.add((dd_iri, self.terms.component, blank))
             self._g.add((blank,
                          self.terms.dimension,
                          self.ns.get(PROJECT)[dim]))
             self._g.add((blank, self.terms.order, Literal(index)))
+            # First dimension attached to the observation level.
             if 1 == index:
                 self._g.add((blank,
                              self.terms.component_attachment,
                              self.terms.observation_type))
+            # Remaining dimensions added in order to the slice level.
             else:
                 self._g.add((blank,
                              self.terms.component_attachment,
                              self.terms.slice_type))
-                slicename += self._dimensions[index - 1].title()
-                slice_by = self.ns.get(PROJECT)["sliceBy" + slicename]
-                # Only add slices defined in csv inputs
-                if slicename in slices_map:
-                    self._g.add((dd, self.terms.slice_key, slice_by))
-                    md = slices_map[slicename]
-                    if len(md[LABEL]) > 0:
-                        label_literal = Literal(md[LABEL],
-                                                lang=md[LABEL_LANG])
-                        self._g.add((slice_by,
-                                     self.terms.rdfs_label,
-                                     label_literal))
-                    if len(md[COMMENT]) > 0:
-                        comment_literal = Literal(md[COMMENT],
-                                                  lang=md[COMMENT_LANG])
-                        self._g.add((slice_by,
-                                     self.terms.rdfs_comment,
-                                     comment_literal))
-                    for slice_idx in range(1, index):
-                        dim = self.ns.get(PROJECT)[self._dimensions[slice_idx]]
-                        self._g.add((slice_by,
-                                     self.terms.component_property,
-                                     dim))
-                        self._g.add((slice_by,
-                                     self.terms.rdf_type,
-                                     self.terms.slice_key_type))
+                # Add slice key to data structure.
+                self._g.add((dd_iri, self.terms.slice_key, slice_by_iri))
+                # Add label to slice key.
+                label_literal = self._get_slice_label()
+                self._g.add((slice_by_iri,
+                             self.terms.rdfs_label,
+                             label_literal))
+                # Add comment to slice key.
+                comment_literal = self._get_slice_comment()
+                self._g.add((slice_by_iri,
+                             self.terms.rdfs_comment,
+                             comment_literal))
+
+                for slice_idx in range(1, index):
+                    dim = self.ns.get(PROJECT)[self._dimensions[slice_idx]]
+                    self._g.add((slice_by_iri,
+                                 self.terms.component_property,
+                                 dim))
+                    self._g.add((slice_by_iri,
+                                 self.terms.rdf_type,
+                                 self.terms.slice_key_type))
             index += 1
 
         # Add measures.
@@ -254,12 +243,12 @@ class Transformer(object):
             if field not in self._dimensions:
                 blank = BNode()
                 measure_field = self.ns.get(PROJECT)[field]
-                self._g.add((dd, self.terms.component, blank))
+                self._g.add((dd_iri, self.terms.component, blank))
                 self._g.add((blank, self.terms.measure, measure_field))
 
         # Add attributes.
         blank = BNode()
-        self._g.add((dd, self.terms.component, blank))
+        self._g.add((dd_iri, self.terms.component, blank))
         self._g.add((blank, self.terms.attribute, self.terms.unit_measure))
         self._g.add((blank,
                      self.terms.component_required,
@@ -300,21 +289,26 @@ class Transformer(object):
                          self.terms.slice_type))
             self._g.add((dataset_iri, self.terms.slice, slice_iri))
             self._g.add((slice_iri, self.terms.slice_structure, dd))
-            for key, vals in self._config_dict.iteritems():
-                field_name = vals[FIELD_NAME]
+            for field_name, value in row.iteritems():
+                if field_name.endswith('_label'):
+                    continue
                 field_name_iri = self.ns.get(PROJECT)[field_name]
                 # Get the rdfs:range to determine datatype.
                 rdfs_ranges = list(self._g.objects(
                     field_name_iri, self.terms.rdfs_range))
-                rdfs_range_iri = rdfs_ranges[0]
+                if rdfs_ranges:
+                    rdfs_range_iri = rdfs_ranges[0]
+                else:
+                    log("Observations added before dsd.")
+                    raise(KeyError("Observations added before dsd."))
                 # Only include the first dimension at the observation level.
                 if field_name not in self._dimensions[1:]:
                     # If the range is not an XSD Literal (i.e., this is an
-                    # object property), use coded iri
+                    # object property), use coded iri.
                     xsd = str(XSD[''].defrag())
                     if str(rdfs_range_iri.defrag()) != xsd:
                         coded_iri = self._convert_literal_to_coded_iri(
-                            rdfs_range_iri, row[key])
+                            rdfs_range_iri, value)
                         self._g.add((obs,
                                      field_name_iri,
                                      coded_iri))
@@ -322,16 +316,14 @@ class Transformer(object):
                         datatype_iri = rdfs_range_iri
                         self._g.add((obs,
                                      field_name_iri,
-                                     Literal(row[key],
+                                     Literal(value,
                                              datatype=datatype_iri)))
                     self._g.add((slice_iri, self.terms.observation, obs))
                 else:
                     # Add slice indices.
                     coded_iri = self._convert_literal_to_coded_iri(
-                        rdfs_range_iri, row[key])
-                    self._g.add((slice_iri,
-                                 field_name_iri,
-                                 coded_iri))
+                        rdfs_range_iri, value)
+                    self._g.add((slice_iri, field_name_iri, coded_iri))
             index += 1
 
     def display_graph(self):
@@ -395,6 +387,19 @@ class Transformer(object):
 
         """
         return self._ns_dict
+
+    def _get_slice_label(self):
+        # Use dimension to create a slice key label.
+        label = "slice by {0} "
+        return Literal(label.format(self._dimensions[0]),
+                       lang=LANG)
+
+    def _get_slice_comment(self):
+        # Use dimensions to create a slice key comment.
+        slices = ', '.join(self._dimensions[1:])
+        label = "Slice by grouping {0} together, fixing values for {1}."
+        return Literal(label.format(self._dimensions[0], slices),
+                       lang=LANG)
 
     def _add_terms(self):
         result = AttrDict(
@@ -482,6 +487,14 @@ class Transformer(object):
         else:
             result = self.ns.get('xsd')['string']
         return result
+
+    def _get_slice_by_iri(self):
+        # Constructs an IRI for a slice definition.
+        slice_by = 'sliceBy'
+        for dim in self._dimensions[1:]:
+            dim_parts = dim.split('_')
+            slice_by += ''.join([i.title() for i in dim_parts])
+        return self.ns.get(PROJECT)[slice_by]
 
     def _get_sha1_iri(self, row):
         # Get iri using based using sha1 of row.
