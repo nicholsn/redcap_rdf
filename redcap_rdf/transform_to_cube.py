@@ -48,7 +48,7 @@ COMMENT = "comment"
 COMMENT_LANG = "comment_lang"
 
 # Project specific configuration.
-STUDY_ID = 'ncanda'
+PROJECT = 'ncanda'
 
 
 class Transformer(object):
@@ -125,7 +125,7 @@ class Transformer(object):
                 field_name = row[FIELD_NAME]
                 field_label = row[FIELD_LABEL]
                 self._fields.append(field_name)
-                node = self.ns.get("ncanda")[field_name]
+                node = self.ns.get(PROJECT)[field_name]
                 # Default to MeasureProperty.
                 prop = self.terms.measure_property_type
                 # Use field_name to create "Field Name" label.
@@ -175,7 +175,7 @@ class Transformer(object):
                     # Create a skos:Concept Class.
                     class_label = ''.join([i.capitalize()
                                            for i in field_name.split('_')])
-                    class_uri = self.ns.get("ncanda")[class_label]
+                    class_uri = self.ns.get(PROJECT)[class_label]
                     self._g.add((class_uri,
                                  self.terms.rdf_type,
                                  self.terms.owl_class))
@@ -189,7 +189,7 @@ class Transformer(object):
                                      field_label))))
                     # Create a skos:ConceptScheme.
                     scheme_label = "{}-concept-scheme".format(field_name)
-                    concept_scheme_uri = self.ns.get("ncanda")[scheme_label]
+                    concept_scheme_uri = self.ns.get(PROJECT)[scheme_label]
                     self._g.add((concept_scheme_uri,
                                  self.terms.rdf_type,
                                  self.terms.concept_scheme_type))
@@ -213,7 +213,7 @@ class Transformer(object):
                         k, v = choice.split(',')
                         code = k.strip()
                         code_label = v.strip()
-                        choice_uri = self.ns.get("ncanda")['-'.join(
+                        choice_uri = self.ns.get(PROJECT)['-'.join(
                             [field_name, code])]
                         self._g.add((choice_uri,
                                      self.terms.rdf_type,
@@ -298,7 +298,7 @@ class Transformer(object):
 
         """
         if self._datadict:
-            dd = self.ns.get('sibis')[self._datadict]
+            dd = self.ns.get(PROJECT)[self._datadict]
         else:
             dd = URIRef(self._datadict)
 
@@ -331,7 +331,7 @@ class Transformer(object):
             self._g.add((dd, self.terms.component, blank))
             self._g.add((blank,
                          self.terms.dimension,
-                         self.ns.get("ncanda")[dim]))
+                         self.ns.get(PROJECT)[dim]))
             self._g.add((blank, self.terms.order, Literal(index)))
             if 1 == index:
                 self._g.add((blank,
@@ -342,7 +342,7 @@ class Transformer(object):
                              self.terms.component_attachment,
                              self.terms.slice_type))
                 slicename += self._dimensions[index - 1].title()
-                slice_by = self.ns.get("ncanda")["sliceBy" + slicename]
+                slice_by = self.ns.get(PROJECT)["sliceBy" + slicename]
                 # Only add slices defined in csv inputs
                 if slicename in slices_map:
                     self._g.add((dd, self.terms.slice_key, slice_by))
@@ -360,7 +360,7 @@ class Transformer(object):
                                      self.terms.rdfs_comment,
                                      comment_literal))
                     for slice_idx in range(1, index):
-                        dim = self.ns.get("ncanda")[self._dimensions[slice_idx]]
+                        dim = self.ns.get(PROJECT)[self._dimensions[slice_idx]]
                         self._g.add((slice_by,
                                      self.terms.component_property,
                                      dim))
@@ -373,7 +373,7 @@ class Transformer(object):
         for field in self._fields:
             if field not in self._dimensions:
                 blank = BNode()
-                measure_field = self.ns.get("ncanda")[field]
+                measure_field = self.ns.get(PROJECT)[field]
                 self._g.add((dd, self.terms.component, blank))
                 self._g.add((blank, self.terms.measure, measure_field))
 
@@ -432,7 +432,7 @@ class Transformer(object):
                 self._g.add((slice_iri, self.terms.slice_structure, dd))
                 for key, vals in self._config_dict.iteritems():
                     field_name = vals[FIELD_NAME]
-                    field_name_iri = self.ns.get("ncanda")[field_name]
+                    field_name_iri = self.ns.get(PROJECT)[field_name]
                     # Get the rdfs:range to determine datatype.
                     rdfs_ranges = list(self._g.objects(
                         field_name_iri, self.terms.rdfs_range))
@@ -622,7 +622,7 @@ class Transformer(object):
         # Create a skos:Concept Class.
         class_label = ''.join([i.capitalize()
                                for i in field_name.split('_')])
-        return self.ns.get('ncanda')[class_label]
+        return self.ns.get(PROJECT)[class_label]
 
     def _build_config_lookup(self, config):
         if config is None:
