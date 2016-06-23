@@ -548,7 +548,7 @@ class Transformer(object):
                 self._g.add((class_uri,
                              self.terms.rdfs_subclass_of,
                              self.terms.concept_type))
-                title = "Code List Class for '{}' term."
+                title = "Code List Class for '{}'.strip() term."
                 self._g.add((class_uri,
                              self.terms.rdfs_label,
                              Literal(title.format(
@@ -564,7 +564,7 @@ class Transformer(object):
                              Literal(field_name)))
                 self._g.add((concept_scheme_uri,
                              self.terms.rdfs_label,
-                             Literal("Code List for '{}' term.".format(
+                             Literal("Code List for '{}'.strip() term.".format(
                                  field_label))))
                 self._g.add((class_uri,
                              self.terms.rdfs_see_also,
