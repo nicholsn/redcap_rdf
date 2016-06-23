@@ -484,7 +484,7 @@ class Transformer(object):
             result = self.ns.get('xsd')['integer']
         elif field_type in ['dropdown', 'radio', 'yesno']:
             result = self._get_class_from_field_name(row.get(FIELD_NAME))
-        elif text_type == 'calc':
+        elif field_type == 'calc':
             result = self.ns.get('xsd')['float']
         else:
             result = self.ns.get('xsd')['string']
@@ -537,7 +537,7 @@ class Transformer(object):
             # Annotate with Range.
             xsd_type = self._data_element_type(row)
             self._g.add((subject_iri, self.terms.rdfs_range, xsd_type))
-            if row[CHOICES]:
+            if row[CHOICES] and row[FIELD_TYPE] != 'calc':
                 # Create a skos:Concept Class.
                 class_label = ''.join([i.capitalize()
                                        for i in field_name.split('_')])
