@@ -342,7 +342,7 @@ class Transformer(object):
         # literal
         coded_iris = list(self._g.subjects(self.terms.rdf_type,
                                            rdfs_range_iri))
-        result = URIRef('')
+        result = RDF['nil']
         for coded_iri in coded_iris:
             notations = list(self._g.objects(coded_iri, self.terms.notation))
             notation = notations[0]
