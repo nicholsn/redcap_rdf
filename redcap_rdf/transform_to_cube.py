@@ -482,7 +482,7 @@ class Transformer(object):
             result = self.ns.get('xsd')['float']
         elif field_type == 'text' and text_type == 'integer':
             result = self.ns.get('xsd')['integer']
-        elif field_type == 'radio' or field_type == 'dropdown':
+        elif field_type in ['dropdown', 'radio', 'yesno']:
             result = self._get_class_from_field_name(row.get(FIELD_NAME))
         elif text_type == 'calc':
             result = self.ns.get('xsd')['float']
@@ -548,13 +548,13 @@ class Transformer(object):
                 self._g.add((class_uri,
                              self.terms.rdfs_subclass_of,
                              self.terms.concept_type))
-                title = "Code List Class for '{}'.strip() term."
+                title = "Code List Class for '{}' term."
                 self._g.add((class_uri,
                              self.terms.rdfs_label,
                              Literal(title.format(
-                                 field_label))))
+                                 field_label.strip()))))
                 # Create a skos:ConceptScheme.
-                scheme_label = "{}-concept-scheme".format(field_name)
+                scheme_label = "{}ConceptScheme".format(class_label)
                 concept_scheme_uri = self.ns.get(PROJECT)[scheme_label]
                 self._g.add((concept_scheme_uri,
                              self.terms.rdf_type,
@@ -564,8 +564,8 @@ class Transformer(object):
                              Literal(field_name)))
                 self._g.add((concept_scheme_uri,
                              self.terms.rdfs_label,
-                             Literal("Code List for '{}'.strip() term.".format(
-                                 field_label))))
+                             Literal("Code List for '{}' term.".format(
+                                 field_label.strip()))))
                 self._g.add((class_uri,
                              self.terms.rdfs_see_also,
                              concept_scheme_uri))
@@ -579,8 +579,10 @@ class Transformer(object):
                     k, v = choice.split(',')
                     code = k.strip()
                     code_label = v.strip()
+                    code_split = '-'.join(code.lower().split('_'))
+                    field_name_split = '-'.join(field_name.split('_'))
                     choice_uri = self.ns.get(PROJECT)['-'.join(
-                        [field_name, code])]
+                        [field_name_split, code_split])]
                     self._g.add((choice_uri,
                                  self.terms.rdf_type,
                                  self.terms.concept_type))
